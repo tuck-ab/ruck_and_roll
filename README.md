@@ -7,3 +7,7 @@
 * Rebecca French
 * Joe Owen
 * Thomas Newton
+
+## Supervisor
+
+* Arshad Jhumka
