@@ -1,4 +1,4 @@
-# Detecting head injuries in rugby using video analysis and machine learning
+# Predicting head injuries in rugby using video analysis and machine learning
 
 ## Members
 
