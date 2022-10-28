@@ -1,7 +1,8 @@
-import cv2
 import os
 import pathlib
 import enum
+
+import cv2
 
 ## -- Defining useful directory paths
 FILE_DIR = pathlib.Path(__file__).parent
