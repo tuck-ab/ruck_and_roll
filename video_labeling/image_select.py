@@ -9,11 +9,37 @@ VIDEO_DIR = os.path.join(FILE_DIR, "..", "videos")
 FRAME_DIR = os.path.join(FILE_DIR, "..", "images")
 
 ## -- Labels for the game
-LABELS = ["Nothing", "Forceful Tackle", "Absorbing Tackle",
-            "Other Tackle", "Ruck", "Maul", "Lineout", "Scrum"]
+LABELS = ["NOTHING", "FORCEFUL_TACKLE", "ABSORBING_TACKLE",
+          "OTHER_TACKLE", "RUCK", "MAUL", "LINEOUT", "SCRUM"]
 
-Video_Label = enum.Enum("Video_Label", LABELS)
+Label = enum.Enum("Label", LABELS)
 
+class Video_Label:
+    def __init__(self):
+        self.runs = []
+        
+        self._previous_label = Label.NOTHING
+        self._current_run_len = 0
+        
+    def add_label(self, label):
+        ## If the label is in the same run
+        if self._previous_label == label:
+            ## Increase run length
+            self._current_run_len += 1
+        else:
+            ## If its different then add the completed run to the list
+            self.runs.append((self._previous_label, self._current_run_len))
+            
+            ## Start a new run
+            self._previous_label = label
+            self._current_run_len = 1
+        
+    def end_label(self):
+        self.runs.append((self._previous_label, self._current_run_len))
+        
+    def save_labels(self, file_name, path="."):
+        with open(os.path.join(path, file_name), "wt") as f:
+            f.write("".join([f"{x[0]}:{x[1]}\n" for x in self.runs]))
 
 def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
     """Saves every frame in a video as a .jpg in a given directory
@@ -68,6 +94,8 @@ def play_video(file_name, vid_path=VIDEO_DIR):
         Defaults to VIDEO_DIR.
     """
     
+    video_label = Video_Label()
+    
     cam = cv2.VideoCapture(os.path.join(vid_path, file_name))
     
     frame = cam.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -99,36 +127,38 @@ def play_video(file_name, vid_path=VIDEO_DIR):
         key = cv2.waitKey(0)
         
         ## Valid inputs when viewing a frame
-        VALID_KEYS = [ord('0'), ord('1'), ord('2'), ord('3'), ord('4'),
-                      ord('5'), ord('6'), ord('7'), ord('q'), ord('n')]
+        VALID_KEYS = {ord('0'), ord('1'), ord('2'), ord('3'), ord('4'),
+                      ord('5'), ord('6'), ord('7'), ord('q'), ord('n')}
         
-        while key != VALID_KEYS:
+        while not key in VALID_KEYS:
             key = cv2.waitKey(0)
             
         ## Decode the input from user inputs
         if key == ord('q'):
             break
         elif key == ord('0'):
-            pass
+            video_label.add_label(Label.NOTHING)
         elif key == ord('1'):
-            pass
+            video_label.add_label(Label.FORCEFUL_TACKLE)
         elif key == ord('2'):
-            pass
+            video_label.add_label(Label.ABSORBING_TACKLE)
         elif key == ord('3'):
-            pass
+            video_label.add_label(Label.OTHER_TACKLE)
         elif key == ord('4'):
-            pass
+            video_label.add_label(Label.RUCK)
         elif key == ord('5'):
-            pass
+            video_label.add_label(Label.MAUL)
         elif key == ord('6'):
-            pass
+            video_label.add_label(Label.LINEOUT)
         elif key == ord('7'):
-            pass
+            video_label.add_label(Label.SCRUM)
         
         frame_number += 1
         
+    video_label.end_label()
+    video_label.save_labels(f"{file_name}.lbl")
+        
     cam.release()
-    
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":
