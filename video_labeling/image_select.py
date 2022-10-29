@@ -34,6 +34,16 @@ class Video_Label:
             ## Start a new run
             self._previous_label = label
             self._current_run_len = 1
+            
+    def undo_label(self):
+        if self._current_run_len == 1:
+            if len(self.runs) > 0:
+                self._previous_label, self._current_run_len = self.runs.pop()
+            else:
+                self._previous_label = Label.NOTHING
+                self._current_run_len = 1
+        else:
+            self._current_run_len -= 1
         
     def end_label(self):
         self.runs.append((self._previous_label, self._current_run_len))
@@ -41,6 +51,39 @@ class Video_Label:
     def save_labels(self, file_name, path="."):
         with open(os.path.join(path, file_name), "wt") as f:
             f.write("".join([f"{x[0]}:{x[1]}\n" for x in self.runs]))
+
+class Frame_Replayer:
+    def __init__(self, first_frame):
+        self._data = [first_frame]
+        self._index = 0
+        
+        self.current_frame = first_frame
+        
+    def push(self, frame):
+        self._data.append(frame)
+        
+        return self.play_next_frame()
+        
+    def replay_previous_frame(self):
+        self._index = max(0, self._index - 1)
+        
+        self.current_frame = self._data[self._index]
+        
+        return self.current_frame
+    
+    def play_next_frame(self):
+        self._index += 1
+        if self._index >= len(self._data):
+            self._index -= 1
+            return None
+        
+        self.current_frame = self._data[self._index]
+        
+        return self.current_frame  
+    
+    def get_frame_number(self):
+        return self._index      
+        
 
 def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
     """Saves every frame in a video as a .jpg in a given directory
@@ -86,6 +129,25 @@ def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
         cam.release()
         cv2.destroyAllWindows()
         
+def annotate_frame(frame, frame_no):
+    ## Write labels to help user
+    ## Frame number
+    cv2.putText(frame, 
+                f"Frame: {frame_no}, Quit: q, Previous frame: b", 
+                (20, 50), 
+                cv2.FONT_HERSHEY_SIMPLEX, 
+                1, (0, 0, 0), 2, 1)
+    
+    ## What key to press for label number
+    for i, label in enumerate(LABELS):
+        cv2.putText(frame, 
+                    f"{i} - {label}", 
+                    (20, (i+2) * 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 
+                    1, (0, 0, 0), 2, 1)
+        
+    return frame
+        
 def play_video(file_name, vid_path=VIDEO_DIR):
     """Plays a video frame by frame. Allows the labeling of each frame.
 
@@ -103,38 +165,31 @@ def play_video(file_name, vid_path=VIDEO_DIR):
     
     cv2.namedWindow("video", cv2.WINDOW_AUTOSIZE)
     
-    frame_number = 0
+    ret, frame = cam.read()
     
-    while cam.isOpened():
-        ret, frame = cam.read()
-        
-        ## Write labels to help user
-        ## Frame number
-        cv2.putText(frame, 
-                    f"Frame: {frame_number}", 
-                    (20, 20), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 
-                    1, (0, 0, 0), 2, 1)
-        
-        ## What key to press for label number
-        for i, label in enumerate(LABELS):
-            cv2.putText(frame, 
-                        f"{i} - {label}", 
-                        (20, 20 + (i+1) * 50), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 
-                        1, (0, 0, 0), 2, 1)
-        
-        cv2.imshow("video", frame)
+    if not ret:
+        print(f"Video is empty...")
+        return
+    
+    frame = annotate_frame(frame, 0)
+    frame_replayer = Frame_Replayer(frame)
+    
+    while cam.isOpened():        
+       
+        cv2.imshow("video", frame_replayer.current_frame)
         key = cv2.waitKey(1000)
         
         ## Valid inputs when viewing a frame
+        ## -- 81 is left arrow (<-)
         VALID_KEYS = {ord('0'), ord('1'), ord('2'), ord('3'), ord('4'),
-                      ord('5'), ord('6'), ord('7'), ord('q'), ord('n')}
+                      ord('5'), ord('6'), ord('7'), ord('q'), ord('b')}
         
         while not key in VALID_KEYS:
             key = cv2.waitKey(1000)
             if not cv2.getWindowProperty('video', cv2.WND_PROP_VISIBLE) >= 1:
                 key = ord('q')
+            
+        get_next_frame = True
             
         ## Decode the input from user inputs
         if key == ord('q'):
@@ -155,8 +210,19 @@ def play_video(file_name, vid_path=VIDEO_DIR):
             video_label.add_label(Label.LINEOUT)
         elif key == ord('7'):
             video_label.add_label(Label.SCRUM)
-        
-        frame_number += 1
+        elif key == ord('b'): ## Left arrow
+            get_next_frame = False
+            video_label.undo_label()
+            
+        if get_next_frame:
+            frame = frame_replayer.play_next_frame()
+            if frame is None:
+                ret, frame = cam.read()
+                frame = annotate_frame(frame, frame_replayer.get_frame_number() + 1)
+                frame_replayer.push(frame)
+        else:
+            frame_replayer.replay_previous_frame()
+
         
     video_label.end_label()
     video_label.save_labels(f"{file_name}.lbl")
