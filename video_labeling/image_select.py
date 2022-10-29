@@ -16,6 +16,10 @@ LABELS = ["NOTHING", "FORCEFUL_TACKLE", "ABSORBING_TACKLE",
 Label = enum.Enum("Label", LABELS)
 
 class Video_Label:
+    """Object that stores runs of labels for videos. It can
+    process adding labels frame by frame automatically calculating runs.
+    It can also write the encoded labels as text to a file.
+    """
     def __init__(self):
         self.runs = []
         
@@ -23,6 +27,11 @@ class Video_Label:
         self._current_run_len = 0
         
     def add_label(self, label):
+        """Add the label for the next frame
+
+        Args:
+            label (Label): The label of the frame
+        """
         ## If the label is in the same run
         if self._previous_label == label:
             ## Increase run length
@@ -36,23 +45,38 @@ class Video_Label:
             self._current_run_len = 1
             
     def undo_label(self):
+        """Undo the label assigned to the most recent frame
+        """
+        ## If its the first label in a run
         if self._current_run_len == 1:
             if len(self.runs) > 0:
+                ## Reload the previous run
                 self._previous_label, self._current_run_len = self.runs.pop()
-            else:
+            else: ## If its the start of the video then restart all the runs
                 self._previous_label = Label.NOTHING
                 self._current_run_len = 1
-        else:
+        else: ## Otherwise decrease size of the run
             self._current_run_len -= 1
         
     def end_label(self):
+        """Ends the final run. Done before writing runs to file at the end of
+        a video
+        """
         self.runs.append((self._previous_label, self._current_run_len))
         
     def save_labels(self, file_name, path="."):
+        """Save the runs to a text file
+
+        Args:
+            file_name (str): Name of the file to save the runs to
+            path (str / os.path, optional): Directory to save the file to. Defaults to ".".
+        """
         with open(os.path.join(path, file_name), "wt") as f:
             f.write("".join([f"{x[0]}:{x[1]}\n" for x in self.runs]))
 
 class Frame_Replayer:
+    """Stores the frames in a video allowing the replay of them
+    """
     def __init__(self, first_frame):
         self._data = [first_frame]
         self._index = 0
@@ -60,11 +84,24 @@ class Frame_Replayer:
         self.current_frame = first_frame
         
     def push(self, frame):
+        """Add new frame from video to the data structure
+
+        Args:
+            frame (frame): Frame to add
+
+        Returns:
+            frame: Current frame being played
+        """
         self._data.append(frame)
         
         return self.play_next_frame()
         
     def replay_previous_frame(self):
+        """Rewind video to show previous frame
+
+        Returns:
+            frame: Current frame being played
+        """
         self._index = max(0, self._index - 1)
         
         self.current_frame = self._data[self._index]
@@ -72,6 +109,14 @@ class Frame_Replayer:
         return self.current_frame
     
     def play_next_frame(self):
+        """If video has been rewound then plays the next frame stored
+        in the data structure. If at most recent frame in data structure
+        then returns `None`.
+
+        Returns:
+            frame: `None` if frame is most recent, else current frame being
+            played
+        """
         self._index += 1
         if self._index >= len(self._data):
             self._index -= 1
@@ -82,6 +127,11 @@ class Frame_Replayer:
         return self.current_frame  
     
     def get_frame_number(self):
+        """Returns the frame number of the current frame being played
+
+        Returns:
+            int: Frame number of current frame being played
+        """
         return self._index      
         
 
@@ -130,8 +180,16 @@ def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
         cv2.destroyAllWindows()
         
 def annotate_frame(frame, frame_no):
-    ## Write labels to help user
-    ## Frame number
+    """Annotates frames with keyboard inputs to help user.
+
+    Args:
+        frame (frame): The frame to annotate
+        frame_no (int): The number of the frame in the video
+
+    Returns:
+        frame: The annotated frame
+    """
+
     cv2.putText(frame, 
                 f"Frame: {frame_no}, Quit: q, Previous frame: b", 
                 (20, 50), 
@@ -152,8 +210,8 @@ def play_video(file_name, vid_path=VIDEO_DIR):
     """Plays a video frame by frame. Allows the labeling of each frame.
 
     Args:
-        file_name (_type_): The name of the video to play
-        vid_path (_type_, optional): Directory where the video is saved.
+        file_name (str): The name of the video to play
+        vid_path (str / os.path, optional): Directory where the video is saved.
         Defaults to VIDEO_DIR.
     """
     
