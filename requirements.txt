@@ -1,5 +1,2 @@
 numpy==1.19.5
 opencv-python==4.6.0.66
-pip==21.3.1
-pkg_resources==0.0.0
-setuptools==39.0.1
