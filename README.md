@@ -8,6 +8,10 @@
 * Joe Owen
 * Thomas Newton
 
+## Supervisor
+
+* Arshad Jhumka
+
 ## Virtual environments and dependencies
 
 It is recommended to use a virtual environment when developing the software
@@ -84,3 +88,4 @@ command must be used:
 ```
 pip freeze | grep -v "pkg_resources" > requirements.txt
 ```
+>>>>>>>>> Temporary merge branch 2
