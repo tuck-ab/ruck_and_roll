@@ -125,14 +125,16 @@ def play_video(file_name, vid_path=VIDEO_DIR):
                         1, (0, 0, 0), 2, 1)
         
         cv2.imshow("video", frame)
-        key = cv2.waitKey(0)
+        key = cv2.waitKey(1000)
         
         ## Valid inputs when viewing a frame
         VALID_KEYS = {ord('0'), ord('1'), ord('2'), ord('3'), ord('4'),
                       ord('5'), ord('6'), ord('7'), ord('q'), ord('n')}
         
         while not key in VALID_KEYS:
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(1000)
+            if not cv2.getWindowProperty('video', cv2.WND_PROP_VISIBLE) >= 1:
+                key = ord('q')
             
         ## Decode the input from user inputs
         if key == ord('q'):
