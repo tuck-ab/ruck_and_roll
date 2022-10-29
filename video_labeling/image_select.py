@@ -48,13 +48,13 @@ class Video_Label:
         """Undo the label assigned to the most recent frame
         """
         ## If its the first label in a run
-        if self._current_run_len == 1:
+        if self._current_run_len <= 1:
             if len(self.runs) > 0:
                 ## Reload the previous run
                 self._previous_label, self._current_run_len = self.runs.pop()
             else: ## If its the start of the video then restart all the runs
                 self._previous_label = Label.NOTHING
-                self._current_run_len = 1
+                self._current_run_len = 0
         else: ## Otherwise decrease size of the run
             self._current_run_len -= 1
         
