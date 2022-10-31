@@ -285,13 +285,19 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
             get_next_frame = False
             
         if get_next_frame:
+            ## Try and get the next image from the buffer
             frame = frame_replayer.play_next_frame()
+            
+            ## If there is no image from the buffer
             if frame is None:
+                ## Read a new image from the video file
                 ret, frame = cam.read()
                 
+                ## Check if its the end of the video
                 if not ret:
                     break
                 
+                ## Add the new frame to the buffer
                 frame = annotate_frame(frame, frame_replayer.get_frame_number() + 1)
                 frame_replayer.push(frame)
         else:
