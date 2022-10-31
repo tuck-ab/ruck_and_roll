@@ -1,5 +1,10 @@
+# Directories containing large files
 /videos/
 /images/
-/venv/
 
+# Python version and virtual environment files
+/venv/
+.python-version
+
+# VSCode settings
 .vscode
