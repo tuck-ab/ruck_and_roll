@@ -295,20 +295,37 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
     
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-f", "--File", help="Input video file")
+parser.add_argument("-f", "--File", help="Input video file (do not use with -p)")
 parser.add_argument("-o", "--Output", help="Output file name")
+parser.add_argument("-p", "--Path", help="Path of the video file (do not use with -f)")
 
 args = parser.parse_args()
     
 if __name__ == "__main__":
-    if args.File is None:
-        print("No file given. Use -f or --File to specify video")
+    if args.File is None and args.Path is None:
+        print("No file given. Use -f or --File to specify video in /videos/ or -p or --Path")
         exit(0)
         
-    if not os.path.exists(os.path.join(VIDEO_DIR, args.File)):
-        print("File doesn't exist")
+    if args.File and args.Path:
+        print("Both path and filename given. Only use one")
         exit(1)
+
+    if args.File:
+        if not os.path.exists(os.path.join(VIDEO_DIR, args.File)):
+            print("File doesn't exist")
+            exit(1)    
+                
+        play_video(args.File, out_dir=args.Output)
+    
+    else:
+        if not os.path.exists(os.path.join(args.Path)):
+            print("File doesn't exist")
+            exit(1) 
+            
+        path = args.Path.split(os.sep)
+        file_name = path.pop()
         
-    play_video(args.File, out_dir=args.Output)
+        play_video(file_name, vid_path=os.path.join(*path), out_dir=args.Output)
+        
     
         
