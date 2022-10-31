@@ -1,6 +1,7 @@
 import os
 import pathlib
 import enum
+import argparse
 
 import cv2
 
@@ -206,7 +207,7 @@ def annotate_frame(frame, frame_no):
         
     return frame
         
-def play_video(file_name, vid_path=VIDEO_DIR):
+def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
     """Plays a video frame by frame. Allows the labeling of each frame.
 
     Args:
@@ -219,7 +220,7 @@ def play_video(file_name, vid_path=VIDEO_DIR):
     
     cam = cv2.VideoCapture(os.path.join(vid_path, file_name))
     
-    frame = cam.get(cv2.CAP_PROP_FRAME_COUNT)
+    # frame = cam.get(cv2.CAP_PROP_FRAME_COUNT)
     
     cv2.namedWindow("video", cv2.WINDOW_AUTOSIZE)
     
@@ -283,12 +284,31 @@ def play_video(file_name, vid_path=VIDEO_DIR):
 
         
     video_label.end_label()
-    video_label.save_labels(f"{file_name}.lbl")
+    
+    if out_dir is None:
+        out_dir = f"{file_name}.lbl"
+        
+    video_label.save_labels(out_dir)
         
     cam.release()
     cv2.destroyAllWindows()
     
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-f", "--File", help="Input video file")
+parser.add_argument("-o", "--Output", help="Output file name")
+
+args = parser.parse_args()
+    
 if __name__ == "__main__":
-    play_video("20220924dmpvcambridge.mp4")
+    if args.File is None:
+        print("No file given. Use -f or --File to specify video")
+        exit(0)
+        
+    if not os.path.exists(os.path.join(VIDEO_DIR, args.File)):
+        print("File doesn't exist")
+        exit(1)
+        
+    play_video(args.File, out_dir=args.Output)
     
         
