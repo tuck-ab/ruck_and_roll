@@ -16,7 +16,7 @@ LABELS = ["NOTHING", "FORCEFUL_TACKLE", "ABSORBING_TACKLE",
 
 Label = enum.Enum("Label", LABELS)
 
-class Video_Label:
+class VideoLabel:
     """Object that stores runs of labels for videos. It can
     process adding labels frame by frame automatically calculating runs.
     It can also write the encoded labels as text to a file.
@@ -72,7 +72,7 @@ class Video_Label:
             file_name (str): Name of the file to save the runs to
             path (str / os.path, optional): Directory to save the file to. Defaults to ".".
         """
-        with open(os.path.join(path, file_name), "wt") as f:
+        with open(os.path.join(path, file_name), "wt", encoding="utf-8") as f:
             f.write("".join([f"{x[0]}:{x[1]}\n" for x in self.runs]))
 
 class Frame_Replayer:
@@ -81,6 +81,7 @@ class Frame_Replayer:
     def __init__(self, first_frame):
         self._data = [first_frame]
         self._index = 0
+        self._frame = 0
         
         self.current_frame = first_frame
         
@@ -95,6 +96,10 @@ class Frame_Replayer:
         """
         self._data.append(frame)
         
+        if len(self._data) > 100:
+            self._data.pop(0)
+            self._index -= 1
+        
         return self.play_next_frame()
         
     def replay_previous_frame(self):
@@ -103,11 +108,18 @@ class Frame_Replayer:
         Returns:
             frame: Current frame being played
         """
-        self._index = max(0, self._index - 1)
+        self._frame = max(0, self._frame - 1)
+        self._index = self._index - 1
+        
+        has_frame = True
+        
+        if self._index < 0:
+            self._index = 0
+            has_frame = False
         
         self.current_frame = self._data[self._index]
         
-        return self.current_frame
+        return self.current_frame, has_frame
     
     def play_next_frame(self):
         """If video has been rewound then plays the next frame stored
@@ -119,8 +131,10 @@ class Frame_Replayer:
             played
         """
         self._index += 1
+        self._frame += 1
         if self._index >= len(self._data):
             self._index -= 1
+            self._frame -= 1
             return None
         
         self.current_frame = self._data[self._index]
@@ -133,7 +147,7 @@ class Frame_Replayer:
         Returns:
             int: Frame number of current frame being played
         """
-        return self._index      
+        return self._frame      
         
 
 def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
@@ -146,9 +160,9 @@ def save_video_frames(file_name, vid_path=VIDEO_DIR, frame_path=FRAME_DIR):
         frame_path (str / os.path, optional): Directory where the frame images
         are saved. Defaults to FRAME_DIR.
     """
-    
+
     cam = cv2.VideoCapture(os.path.join(vid_path, file_name))
-    
+
     ## Check if save directory exists and make one if not
     try:
         if not os.path.exists(frame_path):
@@ -216,7 +230,7 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
         Defaults to VIDEO_DIR.
     """
     
-    video_label = Video_Label()
+    video_label = VideoLabel()
     
     cam = cv2.VideoCapture(os.path.join(vid_path, file_name))
     
@@ -269,16 +283,27 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
             video_label.add_label(Label.SCRUM)
         elif key == ord('b'): ## Left arrow
             get_next_frame = False
-            video_label.undo_label()
             
         if get_next_frame:
+            ## Try and get the next image from the buffer
             frame = frame_replayer.play_next_frame()
+            
+            ## If there is no image from the buffer
             if frame is None:
+                ## Read a new image from the video file
                 ret, frame = cam.read()
+                
+                ## Check if its the end of the video
+                if not ret:
+                    break
+                
+                ## Add the new frame to the buffer
                 frame = annotate_frame(frame, frame_replayer.get_frame_number() + 1)
                 frame_replayer.push(frame)
         else:
-            frame_replayer.replay_previous_frame()
+            _, has_replayed = frame_replayer.replay_previous_frame()
+            if has_replayed:
+                video_label.undo_label()
 
         
     video_label.end_label()
