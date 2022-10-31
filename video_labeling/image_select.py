@@ -220,8 +220,6 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
     
     cam = cv2.VideoCapture(os.path.join(vid_path, file_name))
     
-    # frame = cam.get(cv2.CAP_PROP_FRAME_COUNT)
-    
     cv2.namedWindow("video", cv2.WINDOW_AUTOSIZE)
     
     ret, frame = cam.read()
@@ -326,6 +324,3 @@ if __name__ == "__main__":
         file_name = path.pop()
         
         play_video(file_name, vid_path=os.path.join(*path), out_dir=args.Output)
-        
-    
-        
