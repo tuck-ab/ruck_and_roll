@@ -288,6 +288,10 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
             frame = frame_replayer.play_next_frame()
             if frame is None:
                 ret, frame = cam.read()
+                
+                if not ret:
+                    break
+                
                 frame = annotate_frame(frame, frame_replayer.get_frame_number() + 1)
                 frame_replayer.push(frame)
         else:
