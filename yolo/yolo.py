@@ -28,20 +28,6 @@ import cv2
 import numpy as np
 
 
-# Handle arguments used when called
-# Final tool may or may not use this depending on our implementation, this just makes it easier for now
-ap = argparse.ArgumentParser()
-ap.add_argument('-i', '--image', required=True,
-                help = 'path to input image')
-ap.add_argument('-c', '--config', required=True,
-                help = 'path to yolo config file')
-ap.add_argument('-w', '--weights', required=True,
-                help = 'path to yolo pre-trained weights')
-ap.add_argument('-cl', '--classes', required=True,
-                help = 'path to text file containing class names')
-args = ap.parse_args()
-
-
 def get_output_layers(net):
     """
     Provide the layers for the output classes in the network
@@ -184,6 +170,20 @@ def saveVideo(images, name, fps, OUTPUT_DIR):
 
 
 if __name__ == "__main__":
+
+    # Handle arguments used when called
+    # Final tool may or may not use this depending on our implementation, this just makes it easier for now
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-i', '--image', required=True,
+                    help = 'path to input image')
+    ap.add_argument('-c', '--config', required=True,
+                    help = 'path to yolo config file')
+    ap.add_argument('-w', '--weights', required=True,
+                    help = 'path to yolo pre-trained weights')
+    ap.add_argument('-cl', '--classes', required=True,
+                    help = 'path to text file containing class names')
+    args = ap.parse_args()
+
     ## -- Defining useful directory paths
     FILE_DIR = pathlib.Path(__file__).parent
     INPUT_DIR = os.path.join(FILE_DIR, "inputs")
