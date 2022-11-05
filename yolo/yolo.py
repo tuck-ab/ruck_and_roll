@@ -64,17 +64,13 @@ def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 
 # Method containing the YOLO algorithm for a single image
 # Video analysis calls this function each frame
-def yolo(image, classes, COLORS):
+def yolo(image, net, classes, COLORS):
     #image = cv2.imread(img)
 
     # Get image dimensions
     Width = image.shape[1]
     Height = image.shape[0]
     scale = 0.00392
-
-    # Read in the neural net and load weights
-    # Going through this now this could be alot of the algorithmic complexity
-    net = cv2.dnn.readNet(args.weights, args.config)
 
     blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
 
@@ -139,12 +135,12 @@ def yolo(image, classes, COLORS):
 
 # Function used to save the final output video. Takes the set of images and a filename as arguments
 # Currently only saves to mp4 format but can be modified if necessary
-# Current bug exists with output framerate not matching input
-def saveVideo(images, name):
+def saveVideo(images, name, fps):
+    print(fps)
     width = images[0].shape[1]
     height = images[0].shape[0]
     name = "outputs/" + name    # Saves output video to gitignored filepath
-    video = cv2.VideoWriter(name, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), cv2.CAP_PROP_FPS, (width,height))
+    video = cv2.VideoWriter(name, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (width,height))
 
     for image in images:
         video.write(image)
@@ -166,6 +162,9 @@ with open(args.classes, 'r') as f:
 #Get a nice distribution of colours for boxes
 COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
+# Read in the neural net and load weights
+net = cv2.dnn.readNet(args.weights, args.config)
+
 #Set up the video processor
 capture = cv2.VideoCapture("inputs/" + args.image)
 
@@ -181,7 +180,7 @@ while 1:
     # Current way of detecting the end of video processing is when it throws an error as there is no image
     # This is caught and used as a loop exit condition
     try:
-        image = yolo(image, classes, COLORS)
+        image = yolo(image, net, classes, COLORS)
         images.append(image)
     except Exception as ex:
         print(ex)
@@ -198,6 +197,8 @@ while 1:
     if k == 27:
         break
 
+fps = capture.get(cv2.CAP_PROP_FPS)
+
 # Close the window
 capture.release()
 
@@ -205,4 +206,5 @@ capture.release()
 cv2.destroyAllWindows()
 
 #Save the video output
-saveVideo(images, "Test Output Game.mp4")
+saveVideo(images, args.image, fps)
+#saveVideo(images, "Test Output Game.mp4")
