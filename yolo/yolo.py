@@ -1,24 +1,30 @@
+"""
 #############################################
 #
 #   YOLO Object Detection For Videos
 #   03/11/22
 #
 ############################################
-#
-# Before running, make sure you obtain the weights file yolov3.weights (~200MB so in gitignore) and place it in the same directory
-# To run use the command:
-#       python3 yolo.py --image <Video.mp4> --config yolov3.cfg --weights yolov3.weights --classes yolov3.txt
-#
-# To not needlessly fill up the git, inputs and outputs are to be placed in a gitignored directory:
-#       ./inputs
-#       ./outputs
-# The program is set up to take account of these. 
-# As all inputs are in the inputs directory, you do not need to specify it in the arguments.
+
+Before running, make sure you obtain the weights file yolov3.weights (~200MB so in gitignore) and place it in the same directory
+
+To run use the command:
+    python3 yolo.py --image <Video.mp4> --config yolov3.cfg --weights yolov3.weights --classes yolov3.txt
+
+To not needlessly fill up the git, inputs and outputs are to be placed in a gitignored directory:
+    ./inputs
+    ./outputs
+The program is set up to take account of these. 
+As all inputs are in the inputs directory, you do not need to specify it in the arguments.
+"""
 
 
 # Imports + Dependencies
-import cv2
 import argparse
+import os
+import pathlib
+
+import cv2
 import numpy as np
 
 
@@ -36,8 +42,13 @@ ap.add_argument('-cl', '--classes', required=True,
 args = ap.parse_args()
 
 
-# Provide the layers for the output classes in the network
 def get_output_layers(net):
+    """
+    Provide the layers for the output classes in the network
+
+    Args:
+        net - the read-in neural network
+    """
     
     layer_names = net.getLayerNames()
     try:
@@ -48,9 +59,21 @@ def get_output_layers(net):
     return output_layers
 
 
-# Draw the bounding boxes on the screen and also provide class label
-# Uncomment the part in the label variable to add in confidence levels in prediction for testing
+# 
 def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
+    """
+    Draw the bounding boxes on the screen and also provide class label
+    Uncomment the part in the label variable to add in confidence levels in prediction for testing
+
+    Args:
+        img         - The image to draw predictions on
+        class_id    - The id of the class of the prediction
+        confidence  - The numeric confidence level for the class prediction
+        x           - The top left x coordinate of the box
+        y           - The top left y coordinate of the box
+        x_plus_w    - The bottom right x coordinate of the box
+        y_plus_h    - The bottom right y coordinate of the box
+    """
 
     label = str(classes[class_id])# + " - " +  str(round(confidence, 2))
 
@@ -62,14 +85,19 @@ def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 
 
 
-# Method containing the YOLO algorithm for a single image
-# Video analysis calls this function each frame
-def yolo(image, net, classes, COLORS):
-    #image = cv2.imread(img)
+def yolo(image, net):
+    """
+    Method containing the YOLO algorithm for a single image
+    Video analysis calls this function each frame
+
+    Args:
+        image   - The frame to make predicitons on
+        net     - The pre-loaded neural network in use
+    """
 
     # Get image dimensions
-    Width = image.shape[1]
-    Height = image.shape[0]
+    width = image.shape[1]
+    height = image.shape[0]
     scale = 0.00392
 
     blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
@@ -95,10 +123,10 @@ def yolo(image, net, classes, COLORS):
             class_id = np.argmax(scores)                # We want the class with the greatest confidence
             confidence = scores[class_id]               # Find what that greatest confidence is
             if confidence > 0.5:                        # If it's greater than our threshold then we accept it
-                center_x = int(detection[0] * Width)    # Find box centre
-                center_y = int(detection[1] * Height)
-                w = int(detection[2] * Width)           # Calculate box width and height
-                h = int(detection[3] * Height)
+                center_x = int(detection[0] * width)    # Find box centre
+                center_y = int(detection[1] * height)
+                w = int(detection[2] * width)           # Calculate box width and height
+                h = int(detection[3] * height)
                 x = center_x - w / 2                    # Find the top left corner of the box
                 y = center_y - h / 2
                 class_ids.append(class_id)              # Add the info to the relevant arrays
@@ -126,20 +154,26 @@ def yolo(image, net, classes, COLORS):
     # Return the image with the boxes now drawn on it
     return image
 
-    #cv2.imshow("object detection", image)
-    #cv2.waitKey()
-        
+    # Code for if we wish to save an individual image when testing        
     #cv2.imwrite("object-detection.jpg", image)
     #cv2.destroyAllWindows()
 
 
-# Function used to save the final output video. Takes the set of images and a filename as arguments
-# Currently only saves to mp4 format but can be modified if necessary
-def saveVideo(images, name, fps):
-    print(fps)
+def saveVideo(images, name, fps, OUTPUT_DIR):
+    """
+    Function used to save the final output video. Takes the set of images and a filename as arguments
+    Currently only saves to mp4 format but can be modified if necessary
+
+    Args:
+        images      - The array of images to be converted and saved in video format
+        name        - The filename of the video to save
+        fps         - The output fps of the video
+        OUTPUT_DIR  - The directory where outputs videos are saved
+    """
+
     width = images[0].shape[1]
     height = images[0].shape[0]
-    name = "outputs/" + name    # Saves output video to gitignored filepath
+    name = os.path.join(OUTPUT_DIR, name)   # Saves output video to gitignored filepath
     video = cv2.VideoWriter(name, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (width,height))
 
     for image in images:
@@ -153,58 +187,63 @@ def saveVideo(images, name, fps):
 ###############################################################################
 
 
-# Initial set up of classes
-classes = None
+if __name__ == "__main__":
+    ## -- Defining useful directory paths
+    FILE_DIR = pathlib.Path(__file__).parent
+    INPUT_DIR = os.path.join(FILE_DIR, ".", "inputs")
+    OUTPUT_DIR = os.path.join(FILE_DIR, ".", "outputs")
 
-with open(args.classes, 'r') as f:
-    classes = [line.strip() for line in f.readlines()]
+    # Initial set up of classes
+    classes = None
 
-#Get a nice distribution of colours for boxes
-COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
+    with open(args.classes, 'r') as f:
+        classes = [line.strip() for line in f.readlines()]
 
-# Read in the neural net and load weights
-net = cv2.dnn.readNet(args.weights, args.config)
+    #Get a nice distribution of colours for boxes
+    COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
-#Set up the video processor
-capture = cv2.VideoCapture("inputs/" + args.image)
+    # Read in the neural net and load weights
+    net = cv2.dnn.readNet(args.weights, args.config)
 
-count = 0       # Count can be used here if we wish to perform frame skipping
-images = []     # Array of all images for output video
-while 1:
+    #Set up the video processor
+    capture = cv2.VideoCapture(os.path.join(INPUT_DIR, args.image))
 
-    _, image = capture.read()
+    count = 0       # Count can be used here if we wish to perform frame skipping
+    images = []     # Array of all images for output video
+    while True:
 
-    # If we want to greyscale stuff for some reason, this is the way
-    #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, image = capture.read()
 
-    # Current way of detecting the end of video processing is when it throws an error as there is no image
-    # This is caught and used as a loop exit condition
-    try:
-        image = yolo(image, net, classes, COLORS)
-        images.append(image)
-    except Exception as ex:
-        print(ex)
-        print("Finished processing")
-        break
+        # If we want to greyscale stuff for some reason, this is the way
+        #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Provide an output whilst it is processing
-    cv2.imshow('Object Detection In Videos', image)
+        # Current way of detecting the end of video processing is when it throws an error as there is no image
+        # This is caught and used as a loop exit condition
+        try:
+            image = yolo(image, net)
+            images.append(image)
+        except Exception as ex:
+            print(ex)
+            print("Finished processing")
+            break
 
-    # 1ms wait to exit or pause the output video, funky behaviour occurs at 0 (frames don't display in preview) 
-    # but this is known behaviour of the waitkey function
-    k = cv2.waitKey(1) & 0xff
+        # Provide an output whilst it is processing
+        cv2.imshow('Object Detection In Videos', image)
 
-    if k == 27:
-        break
+        # 1ms wait to exit or pause the output video, funky behaviour occurs at 0 (frames don't display in preview) 
+        # but this is known behaviour of the waitkey function
+        k = cv2.waitKey(1) & 0xff
 
-fps = capture.get(cv2.CAP_PROP_FPS)
+        if k == 27:
+            break
 
-# Close the window
-capture.release()
+    fps = capture.get(cv2.CAP_PROP_FPS)
 
-# De-allocate any associated memory usage
-cv2.destroyAllWindows()
+    # Close the window
+    capture.release()
 
-#Save the video output
-saveVideo(images, args.image, fps)
-#saveVideo(images, "Test Output Game.mp4")
+    # De-allocate any associated memory usage
+    cv2.destroyAllWindows()
+
+    #Save the video output
+    saveVideo(images, args.image, fps, OUTPUT_DIR)
