@@ -8,3 +8,10 @@
 
 # VSCode settings
 .vscode
+
+# YOLO neural network weights
+yolo/yolov3.weights
+
+# YOLO input and out files (images and videos)
+yolo/inputs/
+yolo/outputs/
