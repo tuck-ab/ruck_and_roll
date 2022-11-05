@@ -154,10 +154,6 @@ def yolo(image, net):
     # Return the image with the boxes now drawn on it
     return image
 
-    # Code for if we wish to save an individual image when testing        
-    #cv2.imwrite("object-detection.jpg", image)
-    #cv2.destroyAllWindows()
-
 
 def saveVideo(images, name, fps, OUTPUT_DIR):
     """
@@ -190,8 +186,8 @@ def saveVideo(images, name, fps, OUTPUT_DIR):
 if __name__ == "__main__":
     ## -- Defining useful directory paths
     FILE_DIR = pathlib.Path(__file__).parent
-    INPUT_DIR = os.path.join(FILE_DIR, ".", "inputs")
-    OUTPUT_DIR = os.path.join(FILE_DIR, ".", "outputs")
+    INPUT_DIR = os.path.join(FILE_DIR, "inputs")
+    OUTPUT_DIR = os.path.join(FILE_DIR, "outputs")
 
     # Initial set up of classes
     classes = None
