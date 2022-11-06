@@ -4,6 +4,7 @@ import enum
 import argparse
 
 import cv2
+import numpy as np
 
 ## -- Defining useful directory paths
 FILE_DIR = pathlib.Path(__file__).parent
@@ -316,15 +317,48 @@ def play_video(file_name, vid_path=VIDEO_DIR, out_dir=None):
     cam.release()
     cv2.destroyAllWindows()
     
-parser = argparse.ArgumentParser()
+def parse_labels_to_np_array(path):
+    """Decodes a run length encoded label file and returns the
+    decompressed labels in a numpy array
 
-parser.add_argument("-f", "--File", help="Input video file (do not use with -p)")
-parser.add_argument("-o", "--Output", help="Output file name")
-parser.add_argument("-p", "--Path", help="Path of the video file (do not use with -f)")
+    Args:
+        path (str): Path to the label (.lbl) file to parse
 
-args = parser.parse_args()
+    Returns:
+        numpy.ndarray: Numpy array containing all the labels
+    """
+    
+    ## Read the data
+    with open(path, "rt") as f:
+        raw_data = f.read()
+        
+    ## Split the data into a 2D iterable
+    runs = [row.split(":") for row in raw_data.split("\n")]
+
+    ## Remove any hanging lines
+    while len(runs[-1]) != 2:
+        runs.pop()
+        
+    ## Parse the length to be an integer
+    runs = [(label, int(length)) for label, length in runs]
+    
+    ## Create a mapper for string label to Enum
+    mapper = {}
+    for label, enum in zip(LABELS, Label):
+        mapper[f"Label.{label}"] = enum
+    
+    ## Concatenate the extended labels into a numpy array
+    return np.concatenate([[mapper[label]] * run for label, run in runs])
     
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-f", "--File", help="Input video file (do not use with -p)")
+    parser.add_argument("-o", "--Output", help="Output file name")
+    parser.add_argument("-p", "--Path", help="Path of the video file (do not use with -f)")
+
+    args = parser.parse_args()
+    
     if args.File is None and args.Path is None:
         print("No file given. Use -f or --File to specify video in /videos/ or -p or --Path")
         exit(0)
