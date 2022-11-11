@@ -41,6 +41,12 @@ if __name__ == "__main__":
     
     output = args.Output
     if output is None:
-        output = os.path.join(".", f"{vid_path.split(os.sep)[-1].split('.')[0]}.lbl")
+        ## Work out what the start frame is for the label name
+        start_frame = args.fromframe
+        if start_frame is None:
+            start_frame = 0
+            
+        file_name = f"{vid_path.split(os.sep)[-1].split('.')[0]}from{start_frame}.lbl"
+        output = os.path.join(".", file_name)
         
     label_tracker.write_to_file(output)
