@@ -5,6 +5,12 @@ from .labels import Label, mapper
 SEPARATOR_CHAR = ":"
 
 class LabelTracker:
+    """Object to deal with labels. Supports methods to add and remove
+    labels to be used while labelling a video. Run length encoding
+    to compress the labels into a smaller more user understandable
+    format. Conversion between different data structures eg numpy
+    `ndarray`
+    """
     def __init__(self):
         self._runs = []
         
@@ -44,6 +50,15 @@ class LabelTracker:
             self._current_run_len -= 1
         
     def load_from_file(self, path: str):
+        """Loads the labels from a lbl file.
+
+        Args:
+            path (str): Path of the file to load the labels from
+
+        Returns:
+            LabelTracker: Returns an instance of itself
+        """
+        
         with open(path, "rt") as f:
             raw_data = f.read()
             
@@ -61,6 +76,11 @@ class LabelTracker:
         return self
     
     def write_to_file(self, path: str):
+        """Writes the labels stored to a lbl file
+
+        Args:
+            path (str): Path of the file to write the label to
+        """
         self._runs.append((self._previous_label, self._current_run_len))
         
         with open(path, "wt") as f:
@@ -69,6 +89,11 @@ class LabelTracker:
         self._runs.pop()
 
     def as_numpy_array(self):
+        """Returns the decompressed labels as a numpy `ndarray`
+
+        Returns:
+            ndarray: Numpy array of decompressed labels
+        """
         temp = self._runs.copy()
         temp.append((self._previous_label, self._current_run_len))
         

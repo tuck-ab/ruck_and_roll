@@ -50,6 +50,10 @@ def annotate_frame(frame, frame_no):
     return frame
 
 class Labeller:
+    """Object that deals with the interaction between the tool and
+    the user. Loads and plays the video using a `LabelTracker` to
+    store the labels and a `FrameBuffer` to allow partial rewinding.
+    """
     def __init__(self, video_path):
         ## Object to access frames in video
         self._cap = cv2.VideoCapture(video_path)
@@ -58,6 +62,19 @@ class Labeller:
         self._window_name = "Video"
         
     def run(self, start_frame=None):
+        """Plays the video and tracks the user labels.
+
+        Args:
+            start_frame (int, optional): What frame the video should start 
+            if the video should start part of the way through. Defaults to None.
+
+        Raises:
+            ErrorPlayingVideo: If there was an error playing the video
+
+        Returns:
+            LabelTracker: The label tracker containing the labels given by
+            the user.
+        """
         cv2.namedWindow(self._window_name, cv2.WINDOW_AUTOSIZE)
         
         if start_frame:
