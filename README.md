@@ -88,3 +88,12 @@ command must be used:
 ```
 pip freeze | grep -v "pkg_resources" > requirements.txt
 ```
+
+## Running Python modules
+
+Python modules are run using the `-m` flag, similarly to how you would
+create a virtual environment. To run the `label_tool` module you would use
+
+```
+python -m label_tool
+```

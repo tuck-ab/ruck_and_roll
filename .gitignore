@@ -6,6 +6,9 @@
 /venv/
 .python-version
 
+# Python cache for imported stuff
+__pycache__
+
 # VSCode settings
 .vscode
 
