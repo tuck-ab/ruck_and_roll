@@ -23,30 +23,27 @@ class LabelTracker:
         Args:
             label (Label): The label of the frame
         """
-        ## If the label is in the same run
+
         if self._previous_label == label:
-            ## Increase run length
             self._current_run_len += 1
         else:
-            ## If its different then add the completed run to the list
             self._runs.append((self._previous_label, self._current_run_len))
             
-            ## Start a new run
             self._previous_label = label
             self._current_run_len = 1
             
     def undo_label(self):
         """Undo the label assigned to the most recent frame
         """
-        ## If its the first label in a run
+
         if self._current_run_len <= 1:
             if len(self._runs) > 0:
                 ## Reload the previous run
                 self._previous_label, self._current_run_len = self._runs.pop()
-            else: ## If its the start of the video then restart all the runs
+            else:
                 self._previous_label = Label.NOTHING
                 self._current_run_len = 0
-        else: ## Otherwise decrease size of the run
+        else:
             self._current_run_len -= 1
         
     def load_from_file(self, path: str):
@@ -94,6 +91,7 @@ class LabelTracker:
         Returns:
             ndarray: Numpy array of decompressed labels
         """
+        
         temp = self._runs.copy()
         temp.append((self._previous_label, self._current_run_len))
         
