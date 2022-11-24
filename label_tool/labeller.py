@@ -6,6 +6,7 @@ from .rle import LabelTracker
 
 EXIT_KEY = ord('q')  
 
+## Set of all valid keys that would move a frame forward
 VALID_KEYS = {
     ord('0'),
     ord('1'),
@@ -15,8 +16,34 @@ VALID_KEYS = {
     ord('5'),
     ord('6'),
     ord('7'),
+    ord('8'),
+    ord('9'),
+    ord('u'),
+    ord('m'),
+    ord('s'),
+    ord('l'),
+    ord('r'),
     ord('b'),
     EXIT_KEY
+}
+
+## Map from input key to label
+ACTION_MAP = {
+    ord('0'): Label.NOTHING,
+    ord('1'): Label.CARRY,
+    ord('2'): Label.PASS_L,
+    ord('3'): Label.PASS_R,
+    ord('4'): Label.KICK_L,
+    ord('5'): Label.KICK_R,
+    ord('6'): Label.TACKLE_S_D,
+    ord('7'): Label.TACKLE_S,
+    ord('8'): Label.TACKLE_D_D,
+    ord('9'): Label.TACKLE_D,
+    ord('u'): Label.TACKLE_M,
+    ord('m'): Label.MAUL,
+    ord('s'): Label.SCRUM,
+    ord('l'): Label.LINEOUT,
+    ord('r'): Label.RUCK,
 }
 
 class ErrorPlayingVideo(Exception):
@@ -40,12 +67,12 @@ def annotate_frame(frame, frame_no):
                 1, (0, 0, 0), 2, 1)
     
     ## What key to press for label number
-    for i, label in enumerate(LABELS):
+    for i, key in enumerate(ACTION_MAP):
         cv2.putText(frame, 
-                    f"{i} - {label}", 
-                    (20, (i+2) * 50), 
+                    f"{chr(key)} - {ACTION_MAP[key]}", 
+                    (20, 100 + (i) * 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 
-                    1, (0, 0, 0), 2, 1)
+                    0.6, (0, 0, 0), 1, 1)
         
     return frame
 
@@ -107,24 +134,10 @@ class Labeller:
             ## Parse the key
             if key == EXIT_KEY:
                 break
-            elif key == ord('0'):
-                label_tracker.add_label(Label.NOTHING)
-            elif key == ord('1'):
-                label_tracker.add_label(Label.FORCEFUL_TACKLE)
-            elif key == ord('2'):
-                label_tracker.add_label(Label.ABSORBING_TACKLE)
-            elif key == ord('3'):
-                label_tracker.add_label(Label.OTHER_TACKLE)
-            elif key == ord('4'):
-                label_tracker.add_label(Label.RUCK)
-            elif key == ord('5'):
-                label_tracker.add_label(Label.MAUL)
-            elif key == ord('6'):
-                label_tracker.add_label(Label.LINEOUT)
-            elif key == ord('7'):
-                label_tracker.add_label(Label.SCRUM)
             elif key == ord('b'):
                 frame_forward = False
+            elif key in ACTION_MAP:
+                label_tracker.add_label(ACTION_MAP[key])            
             
             if frame_forward:
                 if frame_buffer.get_next_frame() is None:

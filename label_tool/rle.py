@@ -4,6 +4,9 @@ from .labels import Label, mapper
 
 SEPARATOR_CHAR = ":"
 
+class UnknownKeyLabel(Exception):
+    pass
+
 class LabelTracker:
     """Object to deal with labels. Supports methods to add and remove
     labels to be used while labelling a video. Run length encoding
@@ -66,7 +69,10 @@ class LabelTracker:
             runs.pop()
             
         ## Parse the length to be an integer and label to enum
-        runs = [(mapper[label], int(length)) for label, length in runs]
+        try:
+            runs = [(mapper[label], int(length)) for label, length in runs]
+        except KeyError:
+            raise UnknownKeyLabel("Failed to parse lbl file. Possibly using the old labelling system.")
         
         self._previous_label, self._current_run_len = runs.pop()
         
