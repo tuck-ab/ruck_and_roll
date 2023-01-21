@@ -1,6 +1,7 @@
 # Directories containing large files
 /videos/
 /images/
+/labels/
 
 # Python version and virtual environment files
 /venv/
