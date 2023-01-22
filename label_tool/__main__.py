@@ -42,9 +42,10 @@ if __name__ == "__main__":
     output = args.Output
     if output is None:
         ## Work out what the start frame is for the label name
-        start_frame = args.fromframe
-        if start_frame is None:
+        if args.fromframe is None:
             start_frame = 0
+        else:
+            start_frame = int(args.fromframe)
             
         file_name = f"{vid_path.split(os.sep)[-1].split('.')[0]}from{start_frame}.lbl"
         output = os.path.join(".", file_name)
