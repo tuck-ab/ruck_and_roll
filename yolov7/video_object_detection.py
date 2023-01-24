@@ -65,10 +65,13 @@ if __name__ == "__main__":
     # Initialize video
     cap = cv2.VideoCapture(INFILE)
 
-    fps = cap.get(cv2.CAP_PROP_FPS) #Get framerate to match for output rate
+    if cap.isOpened():
+        fps = cap.get(cv2.CAP_PROP_FPS) #Get framerate to match for output rate
+        width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # float `width` converted to int
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height` converted to int
 
     outputFile = os.path.join(OUT_DIR, opt.output)
-    out = cv2.VideoWriter(outputFile, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (1280, 720)) #Specify output file
+    out = cv2.VideoWriter(outputFile, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (width, height)) #Specify output file
 
     # Initialize YOLOv7 model
     model_name = "yolov7-tiny_Nx3x384x640.onnx"         # The chosen YOLO model, follow instructions in the README for download
