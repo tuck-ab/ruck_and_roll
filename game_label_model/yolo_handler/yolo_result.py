@@ -3,11 +3,35 @@ from decimal import InvalidContext
 from operator import index
 import os
 import pathlib
+import importlib
+import sys
 
 import cv2
 
-from .bounding_box_store import Bounding_Box_Store
+from bounding_box_store import Bounding_Box_Store
+
+
+def import_parents(level=1):
+    global __package__
+    file = pathlib.Path(__file__).resolve()
+    parent, top = file.parent, file.parents[level]
+    
+    sys.path.append(str(top))
+    try:
+        sys.path.remove(str(parent))
+    except ValueError: # already removed
+        pass
+
+    __package__ = '.'.join(parent.parts[len(top.parts):])
+    importlib.import_module(__package__)
+
+import_parents(level=3)
+
 from ...yolov7.YOLOv7.YOLOv7 import YOLOv7
+
+
+
+
 
 class YOLOResult:
     """Wrapper class containing the output of the YOLO algorithm.
@@ -43,7 +67,7 @@ class YOLOResult:
             file_output     - The name of the file where the yolo result will be output
             visual_output   - Boolean variable. If true then the yolo output is displayed while processing
         """
-        FILE_DIR = os.path.join(pathlib.Path(__file__).parent.parent, "yolov7")
+        FILE_DIR = os.path.join(pathlib.Path(__file__).parent.parent.parent, "yolov7")
         MODEL_DIR = os.path.join(FILE_DIR, "models")
         OUT_DIR = os.path.join(FILE_DIR, "outputs")
         IN_DIR = os.path.join(FILE_DIR, "inputs")
@@ -56,6 +80,8 @@ class YOLOResult:
             fps = cap.get(cv2.CAP_PROP_FPS) #Get framerate to match for output rate
             width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # float `width` converted to int
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height` converted to int
+        else:
+            raise Exception("File not found at: " + str(INFILE))
 
         outputFile = os.path.join(OUT_DIR, file_output)
         out = cv2.VideoWriter(outputFile, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (width, height)) #Specify output file
