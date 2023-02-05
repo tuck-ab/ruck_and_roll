@@ -19,3 +19,13 @@ yolo/yolov3.weights
 # YOLO input and out files (images and videos)
 yolo/inputs/
 yolo/outputs/
+
+# YOLOv7 model(s)
+yolov7/models/
+
+#YOLOv7 input and output files
+yolov7/inputs/
+yolov7/outputs/
+
+# MAC OSX auto generated files describing file system structure
+.DS_Store
