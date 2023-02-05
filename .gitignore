@@ -25,3 +25,6 @@ yolov7/models/
 #YOLOv7 input and output files
 yolov7/inputs/
 yolov7/outputs/
+
+# MAC OSX auto generated files describing file system structure
+.DS_Store
