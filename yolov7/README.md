@@ -13,7 +13,7 @@ These folders are all covered in the gitignore due to file sizes
 
 ## YOLOv7 model download
 
-The YOLOv7 models can be downloaded [here](https://drive.google.com/uc?export=download&id=1PrV-9oY1n5ptCF-YRymwp4mHOadK5DZK) and placed in the ./models folder. **This is under the GPLv3 license**. 
+The YOLOv7 models can be downloaded [here](https://s3.ap-northeast-2.wasabisys.com/pinto-model-zoo/307_YOLOv7/no-postprocess/resources.tar.gz) and placed in the ./models folder. **This is under the GPLv3 license**. 
 
 This downloads a folder full of them, I have found the best to be `yolov7-tiny_Nx3x384x640.onnx` which is what the current implemenatation uses, feel free to experiment by modifying the model name in video_object_detection.py.
 
