@@ -67,7 +67,7 @@ class YOLOResult:
         out = cv2.VideoWriter(outputFile, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, (width, height)) #Specify output file
 
         # Initialize YOLOv7 model
-        model_name = "yolov7-tiny_Nx3x384x640.onnx"         # The chosen YOLO model, follow instructions in the README for download
+        model_name = "yolov7-tiny_384x640.onnx"                 # The chosen YOLO model, follow instructions in the README for download
         model_path = os.path.join(MODEL_DIR, model_name)
         #model_path = "models/yolov7-tiny_Nx3x384x640.onnx" 
         yolov7_detector = YOLOv7(model_path, conf_thres=0.5, iou_thres=0.5) #Initialise yolo model
