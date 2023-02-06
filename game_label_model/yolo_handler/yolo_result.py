@@ -3,30 +3,10 @@ from decimal import InvalidContext
 from operator import index
 import os
 import pathlib
-import importlib
-import sys
 
 import cv2
 
-from bounding_box_store import Bounding_Box_Store
-
-
-def import_parents(level=1):
-    global __package__
-    file = pathlib.Path(__file__).resolve()
-    parent, top = file.parent, file.parents[level]
-    
-    sys.path.append(str(top))
-    try:
-        sys.path.remove(str(parent))
-    except ValueError: # already removed
-        pass
-
-    __package__ = '.'.join(parent.parts[len(top.parts):])
-    importlib.import_module(__package__)
-
-import_parents(level=3)
-
+from .bounding_box_store import Bounding_Box_Store
 from ...yolov7.YOLOv7.YOLOv7 import YOLOv7
 
 

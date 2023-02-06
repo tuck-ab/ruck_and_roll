@@ -1,4 +1,4 @@
-from bounding_box import Bounding_Box
+from .bounding_box import Bounding_Box
 
 class Bounding_Box_Store:
     """
