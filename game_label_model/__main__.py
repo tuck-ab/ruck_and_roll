@@ -7,3 +7,5 @@ if __name__ == "__main__":
     
     if cli.get_test_flag():
         run_tests()
+
+    video_dir = cli.get_vid_dir()
