@@ -1,19 +1,19 @@
-class Bounding_Box:
+class BoundingBox:
     """
     Class used to store the bounding box results of the YOLO output
     These can be cleanly handled by other files rather than a set of tuples
     """
     
-    def __init__(self, x, y, w, h, score, className, timestamp):
+    def __init__(self, x, y, w, h, score, class_name, timestamp):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
         self.score = score
-        self.className = className
+        self.class_name = class_name
         self.timestamp = timestamp
 
-    def getCorners(self):
+    def get_corners(self):
         """
         Gets the four corners of the bounding box starting in the top left in a clockwise direction.
         Coordinates are in (x, y) format
@@ -27,7 +27,7 @@ class Bounding_Box:
 
         return corners
 
-    def getMidPoint(self):
+    def get_mid_point(self):
         """
         Gets the midpoint of the bounding box, returns coordinates as (x, y)
         """
@@ -36,16 +36,16 @@ class Bounding_Box:
 
         return [midx, midy]
 
-    def getClassAndScore(self):
+    def get_class_and_score(self):
         """
         Gets the classID and confidence score attributes, returns as an array [classID, confidence score]
         """
 
-        return [self.className, self.score]
+        return [self.class_name, self.score]
 
-    def printBB(self):
+    def print_BB(self):
         """
         Provides a formatted method for printing the bounding box class
         This method is useful for debugging
         """
-        print(self.x, self.y, self.w, self.h, self.score, self.className, self.timestamp)
+        print(self.x, self.y, self.w, self.h, self.score, self.class_name, self.timestamp)

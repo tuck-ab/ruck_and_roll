@@ -6,7 +6,7 @@ import pathlib
 
 import cv2
 
-from .bounding_box_store import Bounding_Box_Store
+from .bounding_box_store import BoundingBoxStore
 from .YOLOv7 import YOLOv7
 
 
@@ -94,7 +94,7 @@ class YOLOResult:
             # Update object localizer
             boxes, scores, class_ids = yolov7_detector(frame)
 
-            bbStore = Bounding_Box_Store(boxes, class_ids, scores, frameNum)
+            bbStore = BoundingBoxStore(boxes, class_ids, scores, frameNum)
             self.bbs.append(bbStore)
             frameNum += 1
             

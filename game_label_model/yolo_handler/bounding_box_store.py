@@ -1,6 +1,6 @@
-from .bounding_box import Bounding_Box
+from .bounding_box import BoundingBox
 
-class Bounding_Box_Store:
+class BoundingBoxStore:
     """
     Wrapper class for storing a group of bounding boxes at a specific frame.
     This allows for better data organisation through knowledge of which bounding boxes occurred in which frames
@@ -23,16 +23,16 @@ class Bounding_Box_Store:
     def append_boxes(self, yolo_boxes, yolo_classes, yolo_scores):
         for box, score, classID in zip(yolo_boxes, yolo_scores, yolo_classes):
             x1, y1, x2, y2 = box.astype(int)
-            bb = Bounding_Box(x1, y1, x2 - x1, y2 - y1, score, self.class_names[classID], self.frame)
+            bb = BoundingBox(x1, y1, x2 - x1, y2 - y1, score, self.class_names[classID], self.frame)
             self.store.append(bb)
 
-    def getStore(self):
+    def get_store(self):
         """
         Method for safe access to the store array, allows access even if the direct variable name changes in the future
         """
         return self.store
 
-    def printStore(self):
+    def print_store(self):
         """
         Method for printing the contents of the boundary box store.
         Useful for debugging
