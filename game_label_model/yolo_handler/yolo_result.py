@@ -7,7 +7,7 @@ import pathlib
 import cv2
 
 from .bounding_box_store import Bounding_Box_Store
-from ...yolov7.YOLOv7.YOLOv7 import YOLOv7
+from .YOLOv7 import YOLOv7
 
 
 
