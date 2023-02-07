@@ -8,7 +8,7 @@ class CommandLineInterface:
             description="Model used to predict actions in rugby"
         )
         
-        self.parser.add_argument("--run_tests", help="Run the tests", action="store_true")
+        self.parser.add_argument("--run_tests", help="run the tests in test.py", action="store_true")
         
     def parse(self):
         self.args = self.parser.parse_args()
