@@ -34,6 +34,9 @@ class VideoHandler:
         """
         self._cap = cv2.VideoCapture(vid_path)
         
+        if not self._cap.isOpened():
+            raise ErrorPlayingVideoException(f"Video file not found: {vid_path}")
+        
         if start_frame:
             self._start_frame = start_frame
             self.current_frame_num = start_frame - 1
@@ -41,6 +44,10 @@ class VideoHandler:
         else:
             self._start_frame = 0
             self.current_frame_num = -1
+            
+        self.fps = self._cap.get(cv2.CAP_PROP_FPS) #Get framerate to match for output rate
+        self.width  = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # float `width` converted to int
+        self.height = int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float `height` converted to int
             
         return self
     
