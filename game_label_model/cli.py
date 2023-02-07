@@ -21,15 +21,31 @@ class CommandLineInterface:
             help="Flag for running on dcs machines where files are stored in /dcs/large for u1903266", 
             action="store_true")
 
+        self.parser.add_argument(
+            "--u1921012", 
+            help="Flag for running on dcs machines where files are stored in /dcs/large for u1921012", 
+            action="store_true")
+
     def parse(self):
         self.args = self.parser.parse_args()
         
     def get_test_flag(self):
         return self.args.run_tests
 
-    def get_vid_dir(self):
+    def get_vid_dir(self) -> str:
+        """
+        Uses the flags to work out if there is a different path for the videos
+        needed.
+
+        Returns:
+            str: Path to the directory containing the videos
+        """
+        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
+
         if self.args.u1903266:
             return os.path.join("dcs", "large", "u1903266", "videos")
-        
 
+        if self.args.u1921012:
+            return os.path.join("dcs", "large", "u1921012", "videos")
+        
         return VIDEO_DIR
