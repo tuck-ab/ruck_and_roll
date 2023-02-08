@@ -6,7 +6,7 @@ class BoundingBoxStore:
     This allows for better data organisation through knowledge of which bounding boxes occurred in which frames
     """
 
-    def __init__(self, yolo_boxes, yolo_classes, yolo_scores, frameNum = -1):
+    def __init__(self, yolo_boxes, yolo_scores, yolo_classes, frameNum = -1):
         self.store = []
         self.frame = frameNum
         self.class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',

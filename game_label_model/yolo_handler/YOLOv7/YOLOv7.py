@@ -30,6 +30,8 @@ class YOLOv7:
 
         Args:
             image - the frame to be processed
+        Returns:
+            Objects detected within the image
         """
         return self.detect_objects(image)
 
@@ -56,6 +58,8 @@ class YOLOv7:
 
         Args:
             image - The frame to be processed
+        Returns:
+            A tuple of bounding boxes, confidence scores, class ids
         """
         input_tensor = self.prepare_input(image)
 
@@ -77,6 +81,8 @@ class YOLOv7:
 
         Args:
             image - The frame to be processed
+        Returns:
+            An input tensor of the frame
         """
         self.img_height, self.img_width = image.shape[:2]
 
@@ -99,6 +105,8 @@ class YOLOv7:
 
         Args:
             input_tensor - The preprocessed image in tensor form
+        Returns:
+            The output of the yolo model
         """
         start = time.perf_counter()
         outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})
@@ -112,6 +120,8 @@ class YOLOv7:
 
         Args:
             output - The raw yolo output
+        Returns:
+            The boxes, scores, and class ids having been thresholded for confidence / overlap
         """
         predictions = np.squeeze(output[0])
 
@@ -150,6 +160,8 @@ class YOLOv7:
 
         Args:
             outputs - Array of processed outputs
+        Returns:
+            Scaled boxes according to image size
         """
 
         scores = np.squeeze(outputs[0], axis=1)
@@ -163,7 +175,6 @@ class YOLOv7:
             return [], [], []
 
         # Extract the boxes and class ids
-        # TODO: Separate based on batch number
         batch_number = predictions[:, 0]
         class_ids = predictions[:, 1]
         boxes = predictions[:, 2:]
@@ -182,6 +193,8 @@ class YOLOv7:
 
         Args:
             predictions - Array of model predictions
+        Returns:
+            The bounding boxes based on the model predictions made
         """
         # Extract boxes from predictions
         boxes = predictions[:, :4]
@@ -200,6 +213,8 @@ class YOLOv7:
 
         Args:
             boxes - The boxes predicted by yolo
+        Returns:
+            The scaled yolo boxes
         """
         # Rescale boxes to original image dimensions
         input_shape = np.array([self.input_width, self.input_height, self.input_width, self.input_height])
@@ -215,6 +230,8 @@ class YOLOv7:
             image       - The image the prediction was made on
             draw_scores - Boolean value, should percentages be drawn
             mask_alpha  - The transparency of the boxes
+        Returns:
+            The image with the box detections drawn on
         """
 
         return draw_detections(image, self.boxes, self.scores,

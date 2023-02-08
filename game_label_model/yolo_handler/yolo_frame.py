@@ -8,7 +8,6 @@ class YOLORunner:
         self._yolo_detector = YOLOv7(model_path, conf_thres=0.5, iou_thres=0.5)
     
     def run(self, frame: np.ndarray) -> BoundingBoxStore:
-        boxes, scores, class_ids = self._yolo_detector(frame)
+        results = self._yolo_detector(frame)
         
-        return BoundingBoxStore(boxes, scores, class_ids)
-        
+        return BoundingBoxStore(*results)
