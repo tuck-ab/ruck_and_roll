@@ -28,6 +28,8 @@ class CommandLineInterface:
 
     def parse(self):
         self.args = self.parser.parse_args()
+
+        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
         
     def get_test_flag(self):
         return self.args.run_tests
@@ -40,8 +42,7 @@ class CommandLineInterface:
         Returns:
             str: Path to the directory containing the videos
         """
-        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
-
+        
         if self.args.u1903266:
             return os.path.join("/dcs", "large", "u1903266", "videos")
 
@@ -52,8 +53,6 @@ class CommandLineInterface:
 
     def get_yolo_model_dir(self) -> str:
         
-        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
-
         if self.args.u1903266:
             return os.path.join("/dcs", "large", "u1903266", "yolo_models")
 
@@ -64,8 +63,6 @@ class CommandLineInterface:
 
     def get_label_dir(self) -> str:
         
-        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
-
         if self.args.u1903266:
             return os.path.join("/dcs", "large", "u1903266", "labels")
 
