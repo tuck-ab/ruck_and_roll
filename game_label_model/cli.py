@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR
+from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR, LABEL_DIR
 
 class CommandLineInterface:
     """Class for dealing with command line options.
@@ -61,3 +61,15 @@ class CommandLineInterface:
             return os.path.join("/dcs", "large", "u1921012", "yolo_models")
 
         return YOLO_MODEL_DIR
+
+    def get_label_dir(self) -> str:
+        
+        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
+
+        if self.args.u1903266:
+            return os.path.join("/dcs", "large", "u1903266", "labels")
+
+        if self.args.u1921012:
+            return os.path.join("/dcs", "large", "u1921012", "label")
+
+        return LABEL_DIR
