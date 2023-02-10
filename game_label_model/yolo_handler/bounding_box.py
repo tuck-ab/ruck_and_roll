@@ -43,6 +43,24 @@ class BoundingBox:
 
         return [self.class_name, self.score]
 
+    def get_width_height(self):
+        """
+        Gets the width and height of the bounding box
+        """
+        return self.w, self.h
+    
+    def get_area(self):
+        """
+        Gets the area of the bounding box (width * height)
+        """
+        return self.w * self.h
+
+    def get_perimeter(self):
+        """
+        Gets the perimeter of the bounding box
+        """
+        return 2 * self.w + 2 * self.h
+
     def print_BB(self):
         """
         Provides a formatted method for printing the bounding box class
