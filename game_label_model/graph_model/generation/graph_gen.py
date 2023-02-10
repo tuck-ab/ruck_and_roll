@@ -55,7 +55,30 @@ class GraphGenerator:
         return self.graph
 
     def calculate_distance(self, bb1, bb2):
-        pass
+        """
+        Calcualtes the distance of the two bounding boxes for the edge weight in the graph
+
+        Args:
+            bb1 - The first bounding box
+            bb2 - The second bounding box
+        Returns:
+            A float representing the physical distance between bb1 and bb2
+        """
+        _, h1 = bb1.get_width_height()
+        _, h2 = bb2.get_width_height()
+
+        # Background people will appear smaller than foreground people through parralax
+        # Therefore their distance must be greater
+        # This means that a form of 3D data must be extracted from the 2D image
+        # This 'z-distance' will be calculated using the relative heights of the players. This is less likely to be obscured than their width
+
+        ratio = h1 / h2 if h1 > h2 else h2 / h1 # Ratio is always >= 1 to be multiplicative of the distance. Smaller distance is closer
+
+        mp1 = bb1.get_mid_point()
+        mp2 = bb2.get_mid_point()
+
+        dist = np.linalg.norm(mp1, mp2) * ratio
+        return dist
 
     def get_graph(self):
         """
