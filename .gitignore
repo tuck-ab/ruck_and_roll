@@ -29,3 +29,6 @@ yolov7/outputs/
 
 # MAC OSX auto generated files describing file system structure
 .DS_Store
+
+# Directory for Slurm output files running on the DCS batch system
+slurms
