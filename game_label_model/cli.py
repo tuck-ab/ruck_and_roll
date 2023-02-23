@@ -52,6 +52,12 @@ class CommandLineInterface:
         return VIDEO_DIR
 
     def get_yolo_model_dir(self) -> str:
+        """Uses the flags to work out if there is a different path for the yolo
+        models needed.
+
+        Returns:
+            str: Path to the directory containing the yolo models
+        """
         
         if self.args.u1903266:
             return os.path.join("/dcs", "large", "u1903266", "yolo_models")
@@ -62,16 +68,28 @@ class CommandLineInterface:
         return YOLO_MODEL_DIR
 
     def get_label_dir(self) -> str:
+        """Uses the flags to work out if there is a different path for the label
+        files needed.
+
+        Returns:
+            str: Path to the directory containing the label files
+        """
         
         if self.args.u1903266:
             return os.path.join("/dcs", "large", "u1903266", "labels")
 
         if self.args.u1921012:
-            return os.path.join("/dcs", "large", "u1921012", "label")
+            return os.path.join("/dcs", "large", "u1921012", "labels")
 
         return LABEL_DIR
 
     def get_what_to_run(self) -> str:
+        """Uses the flags to work out if there is a different function to be
+        run instead of `main`
+
+        Returns:
+            str: A flag to be decoded in `__main__.py`
+        """
         
         if self.args.u1903266:
             return "u1903266"
