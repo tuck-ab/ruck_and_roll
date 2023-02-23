@@ -38,11 +38,11 @@ class VideoHandler:
             raise ErrorPlayingVideoException(f"Video file not found: {vid_path}")
         
         if start_frame:
-            self._start_frame = start_frame
+            self._start_frame_num = start_frame
             self.current_frame_num = start_frame - 1
             self._cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
         else:
-            self._start_frame = 0
+            self._start_frame_num = 0
             self.current_frame_num = -1
             
         self.fps = self._cap.get(cv2.CAP_PROP_FPS) #Get framerate to match for output rate
@@ -71,7 +71,7 @@ class VideoHandler:
             self.current_frame_num += 1
 
             if not ret:
-                if self.current_frame == self._start_frame:
+                if self.current_frame_num == self._start_frame_num:
                     raise ErrorPlayingVideoException(
                         "Error in VideoHandler.get_next_frame, did not return valid frame from video")
                 else: ## At the end of the video

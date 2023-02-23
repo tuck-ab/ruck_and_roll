@@ -32,3 +32,6 @@ yolov7/outputs/
 
 # Directory for Slurm output files running on the DCS batch system
 slurms
+
+# Bounding box analysis data directories
+game_label_model/bb_cnn_model/bb_nums
