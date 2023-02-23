@@ -29,7 +29,7 @@ class CommandLineInterface:
     def parse(self):
         self.args = self.parser.parse_args()
 
-        assert sum([self.args.u1903266, self.args.u1921012]) == 1, "Only one DCS large file flag should be specified at once"
+        assert sum([self.args.u1903266, self.args.u1921012]) <= 1, "Only one DCS large file flag should be specified at once"
         
     def get_test_flag(self):
         return self.args.run_tests
@@ -70,3 +70,8 @@ class CommandLineInterface:
             return os.path.join("/dcs", "large", "u1921012", "label")
 
         return LABEL_DIR
+
+    def get_what_to_run(self) -> str:
+        
+        if self.args.u1903266:
+            return "u1903266"
