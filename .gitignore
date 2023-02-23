@@ -29,3 +29,6 @@ yolov7/outputs/
 
 # MAC OSX auto generated files describing file system structure
 .DS_Store
+
+# Any notebook files
+*.ipynb
