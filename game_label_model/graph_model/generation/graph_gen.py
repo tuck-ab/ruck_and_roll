@@ -78,7 +78,7 @@ class GraphGenerator:
             A float representing the physical distance between bb1 and bb2
         """
         w1, h1 = bb1.get_width_height()
-        w2, h2 = bb2.get_width_height()
+        _, h2 = bb2.get_width_height()
 
         # Background people will appear smaller than foreground people through parralax
         # Therefore their distance must be greater
@@ -90,7 +90,9 @@ class GraphGenerator:
         mp1 = bb1.get_mid_point()
         mp2 = bb2.get_mid_point()
 
-        dist = np.linalg.norm(mp1, mp2) * ratio
+        # Only in the case where the boxes are the same will the second ratio be returned
+        # This allows us to take account of how horizontal a player is
+        dist = max(np.linalg.norm(mp1, mp2) * ratio, w1 / h1)
         return dist
 
     def get_graph(self):
