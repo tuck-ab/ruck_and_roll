@@ -40,7 +40,7 @@ else:
     err = "Model options are '{}', '{}' or '{}. '{}' is an invalid option".format("fast", "accurate", "experimental", opt.model)
     raise FileExistsError(err)
 
-SAVE_DIR = os.path.join(FILE_DIR, opt.file[:-4])
+SAVE_DIR = os.path.join(OUT_DIR, opt.file[:-4])
 NODES_DIR = os.path.join(SAVE_DIR, "nodes")
 EDGES_DIR = os.path.join(SAVE_DIR, "edges")
 try:
