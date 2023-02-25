@@ -21,16 +21,19 @@ class GraphGenerator:
         bbstore = bbstore.get_store()   # We don't require the extra functionality of the class from here
 
         # Get the bounding boxes related to people, filter out others
-        # TODO: Should we also get the bbs for the ball? Maybe in a seperate graph?
-        # TODO: Would need a way to differentiate from ball and person in graph
         filtered_bbs = []
+        has_ball = False
         for bb in bbstore:
             if bb.get_class_and_score()[0] == "person":
                 filtered_bbs.append(bb)
+            elif bb.get_class_and_score[0] == "ball":
+                has_ball = True
+                ball = bb
+        if has_ball:
+            filtered_bbs.append(ball)
 
         # The upper bound for the number of nodes in the graph
         # The neural network takes a fixed size so our graph must be standardised in size
-        # TODO: Examine YOLO on the games further to better determine this number
         max_bbs = 50
 
         nodes = np.zeros(max_bbs)
@@ -40,15 +43,25 @@ class GraphGenerator:
             bb1 = filtered_bbs[i]
             midpoints = bb1.get_mid_point()
             node_name = str(midpoints[0]) + "," + str(midpoints[1])
-            nodes[i] = node_name
+            i_val = i
+            if i == len(filtered_bbs) - 1 and has_ball:
+                nodes[max_bbs - 1] = node_name
+                i_val = max_bbs - 1
+            else:
+                nodes[i] = node_name
 
             for j in range(0, min(max_bbs, len(filtered_bbs))):
                 bb2 = filtered_bbs[j]
                 dist = self.calculate_distance(bb1, bb2)
-                edges[i][j] = dist
+                j_val = j
+                if j == len(filtered_bbs) - 1 and has_ball:
+                    j_val = max_bbs - 1
+                edges[i_val][j_val] = dist
 
         # Need to provide node names for any nodes not reached in the loop
-        for i in range(len(filtered_bbs), max_bbs):
+        start = len(filtered_bbs) - 1 if has_ball else len(filtered_bbs)
+        stop = max_bbs - 1 if has_ball else max_bbs
+        for i in range(start, stop):
             nodes[i] = -i   # No other nodes will be prefixed by a '-' so there are no conflicts
 
         self.graph = Graph(nodes, edges)
@@ -64,8 +77,8 @@ class GraphGenerator:
         Returns:
             A float representing the physical distance between bb1 and bb2
         """
-        _, h1 = bb1.get_width_height()
-        _, h2 = bb2.get_width_height()
+        w1, h1 = bb1.get_width_height()
+        w2, h2 = bb2.get_width_height()
 
         # Background people will appear smaller than foreground people through parralax
         # Therefore their distance must be greater
