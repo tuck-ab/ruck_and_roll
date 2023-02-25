@@ -38,4 +38,4 @@ class BoundingBoxStore:
         Useful for debugging
         """
         for bb in self.store:
-            bb.printBB()
+            bb.print_BB()

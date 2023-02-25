@@ -29,3 +29,7 @@ yolov7/outputs/
 
 # MAC OSX auto generated files describing file system structure
 .DS_Store
+
+# For saving / loading graph structures
+game_label_model/graph_model/generation/inputs/
+game_label_model/graph_model/generation/outputs/

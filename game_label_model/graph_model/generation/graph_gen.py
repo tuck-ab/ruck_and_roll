@@ -26,7 +26,7 @@ class GraphGenerator:
         for bb in bbstore:
             if bb.get_class_and_score()[0] == "person":
                 filtered_bbs.append(bb)
-            elif bb.get_class_and_score[0] == "ball":
+            elif bb.get_class_and_score()[0] == "ball":
                 has_ball = True
                 ball = bb
         if has_ball:
@@ -36,8 +36,11 @@ class GraphGenerator:
         # The neural network takes a fixed size so our graph must be standardised in size
         max_bbs = 50
 
-        nodes = np.zeros(max_bbs)
+        nodes = np.empty(max_bbs, dtype=object)
         edges = np.zeros((max_bbs, max_bbs))    # The graph is fully connected
+        for i in range(0, max_bbs):
+            for j in range(0, max_bbs):
+                edges[i][j] = -1
 
         for i in range(0, min(max_bbs, len(filtered_bbs))):
             bb1 = filtered_bbs[i]
@@ -62,9 +65,9 @@ class GraphGenerator:
         start = len(filtered_bbs) - 1 if has_ball else len(filtered_bbs)
         stop = max_bbs - 1 if has_ball else max_bbs
         for i in range(start, stop):
-            nodes[i] = -i   # No other nodes will be prefixed by a '-' so there are no conflicts
+            nodes[i] = str(i * -1)   # No other nodes will be prefixed by a '-' so there are no conflicts
 
-        self.graph = Graph(nodes, edges)
+        self.graph = Graph(nodes, edges, True)
         return self.graph
 
     def calculate_distance(self, bb1, bb2):
@@ -92,7 +95,8 @@ class GraphGenerator:
 
         # Only in the case where the boxes are the same will the second ratio be returned
         # This allows us to take account of how horizontal a player is
-        dist = max(np.linalg.norm(mp1, mp2) * ratio, w1 / h1)
+        val = math.sqrt((mp1[0] - mp2[0]) ** 2.0 + (mp1[1] - mp2[1]) ** 2.0)
+        dist = max(val * ratio, w1 / h1)
         return dist
 
     def get_graph(self):

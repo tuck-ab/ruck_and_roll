@@ -71,7 +71,7 @@ class VideoHandler:
             self.current_frame_num += 1
 
             if not ret:
-                if self.current_frame == self._start_frame:
+                if np.array_equal(self.current_frame, self._start_frame):
                     raise ErrorPlayingVideoException(
                         "Error in VideoHandler.get_next_frame, did not return valid frame from video")
                 else: ## At the end of the video
