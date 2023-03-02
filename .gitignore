@@ -35,3 +35,5 @@ slurms
 
 # Bounding box analysis data directories
 game_label_model/bb_cnn_model/bb_nums
+game_label_model/bb_cnn_model/bb_data
+game_label_model/bb_cnn_model/bb_data_new
