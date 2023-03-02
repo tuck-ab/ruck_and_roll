@@ -109,3 +109,39 @@ class VideoHandler:
             self.current_frame = self._buffer[self._buffer_index]
             
             return self.current_frame, True
+        
+    def get_frame(self, frame_num: int, show: bool=False) -> np.ndarray:
+        """Gets the frame from a certain frame number in the video. Returns a 
+        black frame if frame number is invalid.
+
+        Args:
+            frame_num (int): The frame number
+            show (bool, optional): Whether to show the frame in the function. Defaults to False.
+
+        Returns:
+            np.ndarray: The frame at the given frame number
+        """
+        if frame_num < self.cap.get(cv2.CAP_PROP_FRAME_COUNT):
+            self._cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+
+            ret, frame = self._cap.read()
+
+            self._cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_num)
+
+            if show:
+                self.show_frame(frame)
+
+            return frame
+        else:
+            return np.zeros((self.width, self.height))
+    
+    def show_frame(self, frame: np.ndarray):
+        """Shows the frame
+
+        Args:
+            frame (np.ndarray): The frame to show
+        """
+        cv2.imshow("frame", frame)
+        cv2.waitKey(0)
+
+        cv2.destroyAllWindows()
