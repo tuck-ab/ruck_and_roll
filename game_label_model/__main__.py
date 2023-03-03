@@ -19,6 +19,6 @@ if __name__ == "__main__":
     what_to_run = cli.get_what_to_run()
 
     if what_to_run == "u1903266":
-        u1903266_run(video_dir, yolo_model_dir)
+        u1903266_run(video_dir, yolo_model_dir, main)
     else:
         main()

@@ -1,7 +1,7 @@
 import os
 import json
 
-from .bb_cnn_model import BoundingBoxDataGatherer
+from .bb_cnn_model import BoundingBoxDataGatherer, BoundingBoxCNN
 from .dir_paths import MODULE_DIR
 from .video_handler import VideoHandler, YOLOVideoWriter
 from .yolo_handler import YOLORunner
@@ -17,13 +17,10 @@ VIDS = [
     "20220903cambridgevplymouthnational-1-bip.mp4"
 ]
 
-def run(video_dir, yolo_model_dir):
-    pass
-    # show_yolo_from_word(
-    #     os.path.join(video_dir, "2022101cambridgevsale-fc-bip.mp4"),
-    #     os.path.join(yolo_model_dir, "yolov7_480x640.onnx"),
-    #     "car"
-    # )
+def run(video_dir, yolo_model_dir, main):
+    vid = os.path.join(video_dir, "220611galleivnor_2_movie-001.mov")
+    mod = os.path.join(yolo_model_dir, "yolov7_480x640.onnx")
+    bb_cnn = BoundingBoxCNN(vid, mod, 5)
 
 
 def get_bb_data(video_dir, yolo_model_dir):
