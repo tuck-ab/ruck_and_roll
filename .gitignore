@@ -2,6 +2,7 @@
 /videos/
 /images/
 /labels/
+/temp/
 
 # Python version and virtual environment files
 /venv/

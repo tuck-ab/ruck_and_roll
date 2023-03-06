@@ -15,10 +15,12 @@ if __name__ == "__main__":
     video_dir = cli.get_vid_dir()
 
     yolo_model_dir = cli.get_yolo_model_dir()
+
+    temp_dir = cli.get_temp_dir()
     
     what_to_run = cli.get_what_to_run()
 
     if what_to_run == "u1903266":
-        u1903266_run(video_dir, yolo_model_dir, main)
+        u1903266_run(video_dir, yolo_model_dir, temp_dir, main)
     else:
         main()
