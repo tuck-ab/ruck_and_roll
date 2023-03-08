@@ -121,7 +121,7 @@ class VideoHandler:
         Returns:
             np.ndarray: The frame at the given frame number
         """
-        if frame_num < self.cap.get(cv2.CAP_PROP_FRAME_COUNT):
+        if frame_num < self._cap.get(cv2.CAP_PROP_FRAME_COUNT):
             self._cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
 
             ret, frame = self._cap.read()
