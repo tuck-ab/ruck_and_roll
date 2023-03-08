@@ -20,7 +20,7 @@ VIDS = [
 ]
 
 def run(video_dir, yolo_model_dir, temp_dir, label_dir):
-    words = ["horse", "dog", "bus", "traffic light"]
+    words = ["chair"]
     for word in words:
         print(f"Running for {word}")
         show_yolo_from_word(

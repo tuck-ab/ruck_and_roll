@@ -10,6 +10,23 @@ from ..hyperparameters import VALID_YOLO_LABELS, NUM_CNNS, BB_SIZE
 
 def generate(vid_dir: str, vid_name: str, yolo_dir: str, yolo_name: str,
              data_dir: str, bb_size: Tuple[int, int]=BB_SIZE):
+    """Generates the data for the training of the Bounding Box CNN. Plays
+    the video and runs yolo on each frame. Chooses the bounding boxes from the frame,
+    pads them into appropriate size, and then saves them to be loaded
+    when the model is being trained.
+
+    Args:
+        vid_dir (str): Directory containing the video
+        vid_name (str): The name of the video file
+        yolo_dir (str): Directory containing the yolo model
+        yolo_name (str): The name of the yolo model
+        data_dir (str): Directory to store the data
+        bb_size (Tuple[int, int], optional): _description_. Defaults to BB_SIZE.
+
+    Raises:
+        ErrorPlayingVideoException: If the video can't be opened/played
+    """
+
     vid_path = os.path.join(vid_dir, vid_name)
     yolo_path = os.path.join(yolo_dir, yolo_name)
 

@@ -12,28 +12,20 @@ from ..hyperparameters import NUM_CNNS, BB_SIZE
 
 
 class BoundingBoxCNN:
-    def __init__(self, num_classes: int,cnn_input_size: Tuple=BB_SIZE,
-                 num_cnn: int=NUM_CNNS, pool_window_size: int=4, plot_im: bool=False):
-        """Class for the Bounding Box CNN model. It defines the architecture of the
-        model as well as providing implimentation for outputting it as an image. It
-        can train the model using a `keras.utils.Sequence` object as a generator.
+    def __init__(self, cnn_input_size: Tuple=BB_SIZE,
+                 num_cnn: int=NUM_CNNS, pool_window_size: int=4):
+        """The Bounding Box CNN. This defines the architecture from the BB_CNN component
+        of the model. It returns the connected layers using given inputs.
 
         Args:
-            num_classes (int): Number of classes for the classifier to predict
-            cnn_input_size (Tuple, optional): The input size of the input CNNs. 
-            Defaults to `hyperparameters.BB_SIZE`.
-            num_cnn (int, optional): The number of parallel CNNs. 
-            Defaults to `hyperparameters.NUM_CNNS`.
-            pool_window_size (int, optional): Size of the window for the MaxPooling layer. 
-            Defaults to 4.
-            plot_im (bool, optional): Whether to save the model architecture as
-            an image in `/MODULE_DIR/../images`. Defaults to False.
+            cnn_input_size (Tuple, optional): The size of the input for each CNN. Defaults to BB_SIZE.
+            num_cnn (int, optional): The number of parallel CNNs. Defaults to NUM_CNNS.
+            pool_window_size (int, optional): The size of the window in the pooling layer. Defaults to 4.
         """
 
         self._cnn_input_size = (*cnn_input_size, 3)
         self._num_cnn = num_cnn
         self._pool_window_size = pool_window_size
-        self._num_classes = num_classes
         
     def get_tensors(self, ins):
         conv_layers = []
@@ -50,7 +42,5 @@ class BoundingBoxCNN:
         concatted = Flatten()(concatted)
 
         dense = Dense(32)(concatted)
-
-        out = Dense(self._num_classes, activation="softmax")(dense)
 
         return dense

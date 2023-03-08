@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 class VideoWriter:
     def __init__(self, out_path, fps, width, height):
@@ -13,7 +14,12 @@ class YOLOVideoWriter(VideoWriter):
     def __init__(self, out_path, fps, width, height):
         super().__init__(out_path, fps, width, height)
 
-    def add_frame(self, frame):
+    def add_frame(self, frame: np.ndarray):
+        """Adds a given frame to the video as a half second still
+
+        Args:
+            frame (np.ndarray): The frame to add
+        """
         num_frames = int(round(self.fps / 2))
 
         for _ in range(0, num_frames):

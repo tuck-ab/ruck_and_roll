@@ -4,10 +4,10 @@ from typing import Tuple
 import numpy as np
 from tensorflow.keras.utils import Sequence, to_categorical
 
-from ..labels import load_from_file as load_labels_from_file
-from ..labels import NUM_CLASSES
-from .generate_yolo_data import generate
 from ..hyperparameters import BB_SIZE, NUM_CNNS
+from ..labels import NUM_CLASSES
+from ..labels import load_from_file as load_labels_from_file
+from .generate_yolo_data import generate
 
 
 class YOLOSequence(Sequence):
