@@ -25,6 +25,11 @@ class CommandLineInterface:
             "--u1921012", 
             help="Flag for running on dcs machines where files are stored in /dcs/large for u1921012", 
             action="store_true")
+        
+        self.parser.add_argument(
+            "--run",
+            help="What fuction to run"
+        )
 
     def parse(self):
         self.args = self.parser.parse_args()
@@ -104,5 +109,7 @@ class CommandLineInterface:
             str: A flag to be decoded in `__main__.py`
         """
         
-        if self.args.u1903266:
+        if self.args.run == "u1903266":
             return "u1903266"
+        
+        return "main"
