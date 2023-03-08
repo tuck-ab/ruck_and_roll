@@ -7,12 +7,12 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
 
 from .bb_cnn_model import BoundingBoxCNN
-from .hyperparameters import NUM_CLASSES, NUM_CNNS
+from .hyperparameters import NUM_CLASSES
 
 
 def build_model():
     ## The BB_CNN model part
-    bb_cnn = BoundingBoxCNN(NUM_CLASSES)
+    bb_cnn = BoundingBoxCNN()
 
     bb_in_size = bb_cnn._cnn_input_size
     bb_num_cnn = bb_cnn._num_cnn
