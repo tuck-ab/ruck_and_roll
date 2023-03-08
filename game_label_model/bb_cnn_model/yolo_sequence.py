@@ -2,10 +2,12 @@ import os
 from typing import Tuple
 
 import numpy as np
-from tensorflow.keras.utils import Sequence
+from tensorflow.keras.utils import Sequence, to_categorical
 
+from ..labels import load_from_file as load_labels_from_file
+from ..labels import NUM_CLASSES
 from .generate_yolo_data import generate
-from .hyperparameters import BB_SIZE
+from ..hyperparameters import BB_SIZE, NUM_CNNS
 
 
 class YOLOSequence(Sequence):
@@ -14,11 +16,14 @@ class YOLOSequence(Sequence):
                  yolo_dir: str, yolo_name: str,
                  temp_path: str, bb_size: Tuple[int, int]=BB_SIZE,
                  batch_size: int=32, generate_data: bool=True):
-        self.labels = []
+        
+        labels_path = os.path.join(labels_dir, labels_name)
+        self.labels = load_labels_from_file(labels_path)
 
         self.batch_size = batch_size
 
         self.data_path = os.path.join(temp_path, "yolo_batch_files")
+        self.dir_name = f"{vid_name}-{yolo_name}"
 
         if generate_data:
             if not os.path.isdir(self.data_path):
@@ -31,4 +36,20 @@ class YOLOSequence(Sequence):
         return int(np.floor(len(self.labels) / self.batch_size))
     
     def __getitem__(self, index):
-        pass
+        frames = list(range(index*self.batch_size, (index+1)*self.batch_size))
+
+        batch_xs = [[] for _ in range(0, NUM_CNNS)]
+        batch_y = []
+
+        for frame in frames:
+            yolo_result_path = os.path.join(self.data_path, self.dir_name,
+                                            f"{frame}.npy")
+            
+            for im, batch_x in zip(np.load(yolo_result_path), batch_xs):
+                batch_x.append(im)
+
+            batch_y.append(self.labels[frame].value - 1)
+
+        batch_x_final = [np.array(xs) for xs in batch_xs]
+
+        return batch_x_final, to_categorical(batch_y, num_classes=NUM_CLASSES)

@@ -1,5 +1,0 @@
-BB_CNN_FILTERS = 2
-NUM_CNNS = 10
-BB_SIZE = (105, 50)
-
-VALID_YOLO_LABELS = {"person",}

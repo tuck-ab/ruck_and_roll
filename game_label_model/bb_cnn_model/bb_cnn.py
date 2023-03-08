@@ -5,52 +5,40 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import (Concatenate, Conv2D, Dense, Flatten,
                                      MaxPooling2D)
 from tensorflow.keras.utils import plot_model
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 from ..dir_paths import MODULE_DIR
-from ..video_handler import VideoHandler
-from ..yolo_handler import YOLORunner
-from .hyperparameters import BB_CNN_FILTERS
+from ..hyperparameters import NUM_CNNS, BB_SIZE
 
 
 class BoundingBoxCNN:
-    def __init__(self, vid_path: str, model_path: str, num_classes: int,
-                 cnn_input_size: Tuple=(500, 500, 3), num_cnn: int=10, 
-                 pool_window_size: int=4, plot_im: bool=False):
-        self._vid_handler = VideoHandler().load_video(vid_path)
-        self._yolo_handler = YOLORunner(model_path)
+    def __init__(self, num_classes: int,cnn_input_size: Tuple=BB_SIZE,
+                 num_cnn: int=NUM_CNNS, pool_window_size: int=4, plot_im: bool=False):
+        """Class for the Bounding Box CNN model. It defines the architecture of the
+        model as well as providing implimentation for outputting it as an image. It
+        can train the model using a `keras.utils.Sequence` object as a generator.
 
-        self._cnn_input_size = cnn_input_size
+        Args:
+            num_classes (int): Number of classes for the classifier to predict
+            cnn_input_size (Tuple, optional): The input size of the input CNNs. 
+            Defaults to `hyperparameters.BB_SIZE`.
+            num_cnn (int, optional): The number of parallel CNNs. 
+            Defaults to `hyperparameters.NUM_CNNS`.
+            pool_window_size (int, optional): Size of the window for the MaxPooling layer. 
+            Defaults to 4.
+            plot_im (bool, optional): Whether to save the model architecture as
+            an image in `/MODULE_DIR/../images`. Defaults to False.
+        """
+
+        self._cnn_input_size = (*cnn_input_size, 3)
         self._num_cnn = num_cnn
         self._pool_window_size = pool_window_size
         self._num_classes = num_classes
-
-        self._model = self.get_model(plot_im)
-
-    def run_frame(self):
-        frame, valid = self._vid_handler.get_next_frame()
-
-        if not valid:
-            print("NOT VALID FRAME IN BoundingBoxCNN.run_frame")
-            return
-            
-        result = self._yolo_handler.run(frame)
-
-        for bb in result.get_store():
-            x_start, x_end = bb.x, bb.x+bb.w
-            y_start, y_end = bb.y, bb.y+bb.h
-
-            bb_im = frame[y_start: y_end, x_start: x_end, :]
-
-    def train(self):
-        pass
-
-    def get_model(self, plot_im):
+        
+    def get_tensors(self, ins):
         conv_layers = []
-        inputs = []
-
-        for i in range(0, self._num_cnn):
-            input_layer = Input(shape=self._cnn_input_size)
-            inputs.append(input_layer)
+        
+        for input_layer in ins:
 
             conv_layer = Conv2D(2, 3, activation="relu", padding="same", 
                                 input_shape=self._cnn_input_size)(input_layer)
@@ -65,11 +53,4 @@ class BoundingBoxCNN:
 
         out = Dense(self._num_classes, activation="softmax")(dense)
 
-        model = Model(inputs, out)
-
-        if plot_im:
-            plot_model(model, to_file=os.path.join(MODULE_DIR, os.pardir, 
-                                                   "images", "BB_CNN_model.png"))
-
-        return model
-        
+        return dense

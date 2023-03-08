@@ -6,7 +6,7 @@ import numpy as np
 
 from ..video_handler import ErrorPlayingVideoException, VideoHandler
 from ..yolo_handler import YOLORunner
-from .hyperparameters import VALID_YOLO_LABELS, NUM_CNNS, BB_SIZE
+from ..hyperparameters import VALID_YOLO_LABELS, NUM_CNNS, BB_SIZE
 
 def generate(vid_dir: str, vid_name: str, yolo_dir: str, yolo_name: str,
              data_dir: str, bb_size: Tuple[int, int]=BB_SIZE):
