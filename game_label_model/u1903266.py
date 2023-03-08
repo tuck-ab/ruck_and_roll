@@ -1,10 +1,12 @@
 import os
 import json
+import time
 
-from .bb_cnn_model import BoundingBoxDataGatherer, BoundingBoxCNN
+from .bb_cnn_model import BoundingBoxDataGatherer, BoundingBoxCNN, YOLOSequence
 from .dir_paths import MODULE_DIR
 from .video_handler import VideoHandler, YOLOVideoWriter
 from .yolo_handler import YOLORunner
+from .model import build_model, train_model
 
 VIDS = [
     "220611galleivnor_2_movie-001.mov",
@@ -17,11 +19,34 @@ VIDS = [
     "20220903cambridgevplymouthnational-1-bip.mp4"
 ]
 
-def run(video_dir, yolo_model_dir, main):
-    vid = os.path.join(video_dir, "220611galleivnor_2_movie-001.mov")
-    mod = os.path.join(yolo_model_dir, "yolov7_480x640.onnx")
-    bb_cnn = BoundingBoxCNN(vid, mod, 5)
+def run(video_dir, yolo_model_dir, temp_dir, label_dir):
+    words = ["horse", "dog", "bus", "traffic light"]
+    for word in words:
+        print(f"Running for {word}")
+        show_yolo_from_word(
+            os.path.join(video_dir, "220611galleivnor_2_movie-001.mov"),
+            os.path.join(yolo_model_dir, "yolov7_480x640.onnx"),
+            word
+        )
 
+def generate_data_somewhat(video_dir, yolo_model_dir, temp_dir, labels_dir):
+    start = time.time()
+
+    mod = "yolov7_480x640.onnx"
+    lab = "gallconcat.lbl"
+    vid = "220611galleivnor_2_movie-001.mov"
+
+    gen = YOLOSequence(labels_dir, lab, video_dir, vid, yolo_model_dir, mod, 
+                        temp_dir, generate_data=False)
+
+    model = build_model()
+    checkpoint_dir = os.path.join(temp_dir, "checkpoints")
+    save_path = os.path.join("/dcs/large/u1903266/models/secondmodel")
+    model = train_model(model, gen, checkpoint_dir, save_path)
+
+    end = time.time()
+
+    print(f"Runtime: {end-start}")
 
 def get_bb_data(video_dir, yolo_model_dir):
     for vid in ["nootnoot.mp4"]:
@@ -63,7 +88,7 @@ def show_yolo_from_word(vid_path, yolo_path, word):
 
     vh = VideoHandler().load_video(vid_path)
     vw = YOLOVideoWriter(
-        os.path.join(MODULE_DIR, "..", "videos", f"cam_v_sale_{word}.mp4"),
+        os.path.join(MODULE_DIR, "..", "videos", f"lei_v_nor_{word}.mp4"),
         vh.fps,
         vh.width,
         vh.height
