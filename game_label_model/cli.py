@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR, LABEL_DIR
+from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR, LABEL_DIR, TEMP_DIR
 
 class CommandLineInterface:
     """Class for dealing with command line options.
@@ -82,6 +82,19 @@ class CommandLineInterface:
             return os.path.join("/dcs", "large", "u1921012", "labels")
 
         return LABEL_DIR
+    
+    def get_temp_dir(self) -> str:
+        """Uses the flags to work out if there is a different path for a
+        temporary directory
+
+        Returns:
+            str: Path to a temporary directory
+        """
+
+        if self.args.u1903266:
+            return os.path.join("/dcs", "large", "u1903266", "temp")
+        
+        return TEMP_DIR
 
     def get_what_to_run(self) -> str:
         """Uses the flags to work out if there is a different function to be
