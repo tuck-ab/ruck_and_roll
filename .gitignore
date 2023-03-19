@@ -33,3 +33,4 @@ yolov7/outputs/
 # For saving / loading graph structures
 game_label_model/graph_model/generation/inputs/
 game_label_model/graph_model/generation/outputs/
+game_label_model/graph_model/generation/labels/
