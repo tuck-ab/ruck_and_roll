@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from tensroflow.keras.layers import Conv3D, Dense, Flatten, MaxPooling3D
+from tensorflow.keras.layers import Conv3D, Dense, Flatten, MaxPooling3D
 
 from ..hyperparameters import (THREED_CNN_FILTERS, THREED_CNN_INPUT_SHAPE,
                                THREED_CNN_KERNEL_SIZE, THREED_CNN_POOL_SIZE,
