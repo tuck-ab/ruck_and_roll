@@ -1,6 +1,6 @@
 import enum
 
-LABELS = [
+LABELS_RAW = [
     "NOTHING",
     "CARRY",
     "PASS_L",
@@ -18,6 +18,38 @@ LABELS = [
     "MAUL"    
 ]
 
+LABELS = [
+    "NOTHING",
+    "CARRY",
+    "PASS",
+    "KICK",
+    "RUCK",
+    "TACKLE",
+    "LINEOUT",
+    "SCRUM",
+    "MAUL"
+]
+
+TRANSLATOR = {
+    "NOTHING": "NOTHING",
+    "CARRY": "CARRY",
+    "PASS_L": "PASS",
+    "PASS_R": "PASS",
+    "KICK_L": "KICK",
+    "KICK_R": "KICK",
+    "RUCK": "RUCK",
+    "TACKLE_S_D": "TACKLE",
+    "TACKLE_S": "TACKLE",
+    "TACKLE_D_D": "TACKLE",
+    "TACKLE_D": "TACKLE",
+    "TACKLE_M": "TACKLE",
+    "LINEOUT": "LINEOUT",
+    "SCRUM": "SCRUM",
+    "MAUL": "MAUL"    
+}
+
+
+
 Label = enum.Enum("Label", LABELS)
 NUM_CLASSES = len(LABELS)
 
@@ -27,7 +59,8 @@ LabelMapper = {}
 for label, enum in zip(LABELS, Label):
     LabelMapper[f"Label.{label}"] = enum
 
-def load_from_file(path: str):
+
+def load_from_file(path: str, expanded=True):
 
     labels = []
 
@@ -36,6 +69,9 @@ def load_from_file(path: str):
             if line.strip():
                 label, num = line.split(SEPARATOR_CHAR)
 
-                labels += [LabelMapper[label]] * int(num)
+                if expanded:
+                    labels += [LabelMapper[TRANSLATOR[label]]] * int(num)
+                else:
+                    labels.append((LabelMapper[TRANSLATOR[label]], int(num)))
 
     return labels

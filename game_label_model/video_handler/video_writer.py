@@ -24,3 +24,10 @@ class YOLOVideoWriter(VideoWriter):
 
         for _ in range(0, num_frames):
             self._out.write(frame)
+
+class DataGenWriter(VideoWriter):
+    def __init__(self, out_path, fps, width, height):
+        super().__init__(out_path, fps, width, height)
+
+    def add_frame(self, frame: np.ndarray):
+        self._out.write(frame)

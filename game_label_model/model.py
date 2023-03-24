@@ -35,7 +35,18 @@ def build_model():
 
     return model
 
-def train_model(model, generator, checkpoint_dir, save_path, verbose=0):
+def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, verbose=0):
+    file_name = os.path.join(checkpoint_dir, "model_checkpoint")
+    checkpoint = ModelCheckpoint(file_name)
+
+    model.fit(x=train_sequence, validation_data=val_sequence,
+              callbacks=[checkpoint], use_multiprocessing=False,
+              verbose=verbose)
+    
+    model.save(save_path)
+    return model
+
+def naiive_train_model(model, generator, checkpoint_dir, save_path, verbose=0):
     file_name = os.path.join(checkpoint_dir, "model_checkpoint")
     checkpoint = ModelCheckpoint(file_name)
     

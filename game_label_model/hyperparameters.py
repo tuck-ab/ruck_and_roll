@@ -6,3 +6,5 @@ BB_SIZE = (105, 50)
 
 VALID_YOLO_LABELS = {"person",}
 NUM_CLASSES = labels_NUM_CLASSES
+
+CLIP_SIZE = 25

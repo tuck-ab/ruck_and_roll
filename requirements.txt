@@ -7,3 +7,5 @@ onnxruntime
 
 tensorflow==2.9.1
 pydot
+
+scikit-learn
