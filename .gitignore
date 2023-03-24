@@ -2,6 +2,7 @@
 /videos/
 /images/
 /labels/
+/temp/
 
 # Python version and virtual environment files
 /venv/
@@ -29,3 +30,11 @@ yolov7/outputs/
 
 # MAC OSX auto generated files describing file system structure
 .DS_Store
+
+# Directory for Slurm output files running on the DCS batch system
+slurms
+
+# Bounding box analysis data directories
+game_label_model/bb_cnn_model/bb_nums
+game_label_model/bb_cnn_model/bb_data
+game_label_model/bb_cnn_model/bb_data_new
