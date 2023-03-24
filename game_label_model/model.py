@@ -8,6 +8,7 @@ from tensorflow.keras.optimizers import Adam
 
 from .bb_cnn_model import BoundingBoxCNN
 from .hyperparameters import NUM_CLASSES
+from .threed_cnn_model import ThreeDCNN
 
 
 def build_model():
@@ -19,15 +20,27 @@ def build_model():
     bb_cnn_ins = [Input(shape=bb_in_size, name=f"input_{i}") for i in range(0, bb_num_cnn)]
     bb_cnn_out = bb_cnn.get_tensors(bb_cnn_ins)
 
+    ## The 3D CNN model part
+    threed_cnn = ThreeDCNN()
+    threed_cnn_in_shape = threed_cnn.input_shape
+    threed_input = Input(shape=threed_cnn_in_shape, name="threedcnn")
+    threed_cnn_out = threed_cnn.get_tensors(threed_input)
 
 
     ## Concattenate all the outputs and combine them into a final dense layer
-    concatted = Concatenate()([bb_cnn_out])
+    concatted = Concatenate()([bb_cnn_out, threed_cnn_out])
     concatted = Flatten()(concatted)
+
+    ## TODO add some more dense layers here?
+
+
+    ## The final output layer
     output_layer = Dense(NUM_CLASSES, activation="softmax")(concatted)
 
     ## Collate the inputs together
-    model_inputs = bb_cnn_ins
+    model_inputs = [threed_input]
+    for input_layer in bb_cnn_ins:
+        model_inputs.append(input_layer)
 
     ## Build and compile the model
     model = Model(model_inputs, output_layer)
