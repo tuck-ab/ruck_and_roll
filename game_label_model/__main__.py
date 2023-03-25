@@ -40,7 +40,7 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
     save_path = os.path.join(temp_dir, "first_big_model.h5")
 
-    model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=2)
+    model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=1)
 
     model = load_model(os.path.join(temp_dir, "first_big_model.h5"))
 

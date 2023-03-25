@@ -66,8 +66,8 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
               validation_steps=len(val_sequence),
               epochs=EPOCHS,
               callbacks=[checkpoint], 
-              use_multiprocessing=True,
-              workers=12,
+            #   use_multiprocessing=True,
+            #   workers=6,
               verbose=verbose)
     
     model.save(save_path)
