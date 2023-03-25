@@ -143,7 +143,7 @@ class VideoHandler:
         
         self.current_frame_num = frame_num - 1
         self._cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_num)
-        self.get_next_frame()
+        return self.get_next_frame()
         
         
     def get_clip(self, start_frame: int, length: int) -> list[np.ndarray]:

@@ -57,7 +57,7 @@ SEPARATOR_CHAR = ":"
 
 LabelMapper = {}
 for label, enum in zip(LABELS, Label):
-    LabelMapper[f"Label.{label}"] = enum
+    LabelMapper[label] = enum
 
 
 def load_from_file(path: str, expanded=True):
@@ -68,6 +68,8 @@ def load_from_file(path: str, expanded=True):
         for line in f:
             if line.strip():
                 label, num = line.split(SEPARATOR_CHAR)
+
+                label = label.split(".")[1]
 
                 if expanded:
                     labels += [LabelMapper[TRANSLATOR[label]]] * int(num)

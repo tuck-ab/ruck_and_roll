@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from tensorflow.keras.layers import Conv3D, Dense, Flatten, MaxPooling3D, BatchNormalization
+from tensorflow.keras.layers import (BatchNormalization, Conv3D, Dense,
+                                     Dropout, Flatten, MaxPooling3D)
 
 from ..hyperparameters import (THREED_CNN_FILTERS, THREED_CNN_INPUT_SHAPE,
                                THREED_CNN_KERNEL_SIZE, THREED_CNN_POOL_SIZE,
@@ -34,24 +35,17 @@ class ThreeDCNN:
             strides=self.pool_strides
         )(conv)
 
-        flattened = Flatten()(pooled)
+        batch_normalised = BatchNormalization(center=True, scale=True)(pooled)
+        ## dropout = Dropout(0.5)(batch_normalised)
+        conv3d = Conv3D(self.num_filters, kernel_size=self.kernel_size, 
+                        activation='relu', kernel_initializer='he_uniform')(batch_normalised)
+        maxpooled = MaxPooling3D(pool_size=self.pool_size)(conv3d)
+        batch_normalised2 = BatchNormalization(center=True, scale=True)(maxpooled)
+        ## dropout2 = Dropout(0.5)(batch_normalised2)
+        flattened = Flatten()(batch_normalised2)
+        dense1 = Dense(256, activation='relu', kernel_initializer='he_uniform')(flattened)
+        dropout = Dropout(0.5)(dense1)
+        dense2 = Dense(256, activation='relu', kernel_initializer='he_uniform')(dropout)
 
-        ##TODO: Deffo needs to be more layers here
-        # model = Sequential()
-        # model.add(Conv3D(
-        #     32, (3,3,3), activation='relu', input_shape=(25,224,224,3)
-        # ))
-        # model.add(MaxPooling3D(pool_size=(2,2,2), strides=(1,2,2)))
-        # model.add(BatchNormalization(center=True, scale=True))
-        # model.add(Dropout(0.5))
-        # model.add(Conv3D(64, kernel_size=(3, 3, 3), activation='relu', kernel_initializer='he_uniform')) ##...
-        # model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-        # model.add(BatchNormalization(center=True, scale=True))
-        # model.add(Dropout(0.5))
-        # model.add(Flatten())
-        # model.add(Dense(256, activation='relu', kernel_initializer='he_uniform'))
-        # model.add(Dense(256, activation='relu', kernel_initializer='he_uniform'))
-        # model.add(Dense(13, activation='softmax'))
-        
+        return dense2
 
-        return flattened

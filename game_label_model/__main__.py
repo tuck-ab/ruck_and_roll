@@ -1,19 +1,20 @@
 import os
 
 import pandas as pd
+from tensorflow.keras.models import load_model
 
 from .cli import CommandLineInterface
 from .tests import run_tests
 from .u1903266 import run as u1903266_run
 from .data_gen import IntermediateDataGenerator
 from .sequence import get_train_test_val
-from .model import build_model, train_model
+from .model import build_model, train_model, test_model
 
 ## TODO change these to command line argurments
 YOLO_MODEL = "yolov7_480x640.onnx"
 VIDEO = "220611galleivnor_2_movie-001.mov"
 LABEL_FILE = "gallconcat.lbl"
-NEED_TO_GEN = True
+NEED_TO_GEN = False
 
 def main(video_dir, yolo_model_dir, temp_dir, label_dir):
     vid_path = os.path.join(video_dir, VIDEO)
@@ -33,13 +34,17 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
     model = build_model()
 
-    checkpoint_dir = os.path.join(temp_dir, "first_model_checkpoint")
+    checkpoint_dir = os.path.join(temp_dir, "first_big_model_checkpoint")
     if not os.path.isdir(checkpoint_dir):
         os.mkdir(checkpoint_dir)
 
-    save_path = os.path.join(temp_dir, "first_model")
+    save_path = os.path.join(temp_dir, "first_big_model.h5")
 
-    model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path)
+    model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=2)
+
+    model = load_model(os.path.join(temp_dir, "first_big_model.h5"))
+
+    test_model(model, test_seq)
 
 if __name__ == "__main__":
     cli = CommandLineInterface()

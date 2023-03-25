@@ -2,6 +2,8 @@ import os
 import json
 import time
 
+import numpy as np
+
 from .bb_cnn_model import BoundingBoxDataGatherer, BoundingBoxCNN, YOLOSequence
 from .dir_paths import MODULE_DIR
 from .video_handler import VideoHandler, YOLOVideoWriter
@@ -20,14 +22,28 @@ VIDS = [
 ]
 
 def run(video_dir, yolo_model_dir, temp_dir, label_dir):
-    words = ["chair"]
-    for word in words:
-        print(f"Running for {word}")
-        show_yolo_from_word(
-            os.path.join(video_dir, "220611galleivnor_2_movie-001.mov"),
-            os.path.join(yolo_model_dir, "yolov7_480x640.onnx"),
-            word
-        )
+    # words = ["chair"]
+    # for word in words:
+    #     print(f"Running for {word}")
+    #     show_yolo_from_word(
+    #         os.path.join(video_dir, "220611galleivnor_2_movie-001.mov"),
+    #         os.path.join(yolo_model_dir, "yolov7_480x640.onnx"),
+    #         word
+    #     )
+
+    check_bb(video_dir, temp_dir)
+
+def check_bb(video_dir, temp_dir):
+    int_dir = os.path.join(temp_dir, "first_model_int")
+
+    vid_handler = VideoHandler().load_video(os.path.join(video_dir, "220611galleivnor_2_movie-001.mov"))
+    vid_handler.get_next_frame()
+
+    frame = vid_handler.current_frame
+    bbs = np.load(os.path.join(int_dir, "yolo-0.npy"))
+
+    vid_handler.show_frame(bbs[0])
+
 
 def generate_data_somewhat(video_dir, yolo_model_dir, temp_dir, labels_dir):
     start = time.time()
