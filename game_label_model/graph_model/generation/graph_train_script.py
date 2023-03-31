@@ -126,6 +126,7 @@ import tensorflow_gnn as tfgnn
 
 from tensorflow_gnn import runner
 from tensorflow_gnn.models import gat_v2
+import pandas as pd
 
 def create_graph_tensor(nodes, edges, labelID):
     newNodes =[]
@@ -148,9 +149,10 @@ def create_graph_tensor(nodes, edges, labelID):
                     sizes = [len(edges) ** 2]
                     )
     # edge_set = tfgnn.EdgeSet.from_fields(adjacency=edges, sizes=tf.constant([shape[0], shape[1]]))
-    
+    test_df = pd.DataFrame([labelID], columns = ['label'], dtype = 'int32', index=[0])
+    placeholder_df = pd.DataFrame([42], columns=['placeholder'], dtype = 'int32', index = [0])
     return tfgnn.GraphTensor.from_pieces(context=tfgnn.Context.from_fields(
-                    features={'action_label': [labelID]}, sizes= [1], shape=np.array(1).shape), 
+                    features={'action_label': test_df, 'placeholder' : placeholder_df}, sizes=[len(test_df)]), 
                     node_sets={'players': tfgnn.NodeSet.from_fields(
                         features={'hidden': tf.constant(newNodes)}, 
                         sizes=[len(newNodes)])
@@ -242,7 +244,7 @@ graphs = [tensor_1, tensor_2]
 #     # return dataset.zip(dataset, label)
 #     return dataset
 
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 #I think this just takes a batch of graphs and makes them into 1? idk im still confused by tensorflow datasets
 def batch_merge(graph):
     graph = graph.merge_batch_to_components()
@@ -251,11 +253,10 @@ def batch_merge(graph):
     context_features = graph.context.get_features_dict()
     
     label = context_features.pop('action_label')
-
     new_graph = graph.replace_features(
         node_sets={'players':node_features},
         edge_sets={'edge':edge_features},
-        context = {})#{'action':np.zeros(BATCH_SIZE)})
+        context = context_features)#{'action':np.zeros(BATCH_SIZE)})
     return new_graph, label
 
 def create_dataset(graphs, func):
@@ -329,7 +330,7 @@ def build_graph_tensor(
     )
     # adjacency = [[0,2], [3,6], [2,9], [1,3], [5,7], [7,8], [9,9], [3,5], [5,6], [4,2]]
     print("Adjacency :,0 and :,1")
-    # print(adjacency)
+    print(adjacency)
     print(adjacency[:, 0])
     print(adjacency[:, 1])
     print("Edges features")
@@ -345,6 +346,8 @@ def build_graph_tensor(
             }
         ),
     )
+    print("Edges")
+    print(edges)
     print("Nodes hidden state (the nodes?)")
     print(tf.random.normal(shape=[num_nodes, num_features]))
     print([num_nodes])
@@ -352,9 +355,12 @@ def build_graph_tensor(
         features={"hidden_state": tf.random.normal(shape=[num_nodes, num_features])},
         sizes=[num_nodes],
     )
+    print("Nodes")
+    print(nodes)
 
     return tfgnn.GraphTensor.from_pieces(
-        edge_sets={"edge": edges}, node_sets={"node": nodes}
+        context=tfgnn.Context.from_fields(
+                    features={'action_label': [1]}, sizes= [1], shape=np.array(1).shape), edge_sets={"edge": edges}, node_sets={"node": nodes}
     )
 
 
@@ -396,10 +402,18 @@ hidden = tfgnn.keras.layers.Readout(node_set_name="node")(graph)
 output = tf.keras.layers.Dense(1, activation="sigmoid")(hidden)
 model = tf.keras.Model(input, output)
 
+print(graph_tensor)
 y = model(graph_tensor)
 print(y)
 
+model.compile(
+    tf.keras.optimizers.Adam(learning_rate=0.01),
+    loss = 'categorical_crossentropy',
+    metrics = ['categorical_accuracy']
+)
+
 print("\n"*5)
+print("End of working")
 
 
 
@@ -421,41 +435,44 @@ graph_tensor = graphs[0]
 print(graph_tensor)
 spec = graph_tensor.spec
 
-input = tf.keras.layers.Input(type_spec=spec)
-update = tfgnn.keras.layers.GraphUpdate(
-    edge_sets={
-        "edge": tfgnn.keras.layers.EdgeSetUpdate(
-            next_state=MultiplyNodeEdge(edge_feature="edge_weight"),
-            edge_input_feature=["edge_weight"],
-        )
-    },
-    node_sets={
-        "players": tfgnn.keras.layers.NodeSetUpdate(
-            edge_set_inputs={"edge": tfgnn.keras.layers.Pool(tfgnn.TARGET, "sum")},
-            next_state=tfgnn.keras.layers.NextStateFromConcat(
-                tf.keras.layers.Dense(16)
-            ),
-        )
-    },
-)
-graph = update(input)
-hidden = tfgnn.keras.layers.Readout(node_set_name="players")(graph)
-output = tf.keras.layers.Dense(1, activation="sigmoid")(hidden)
-model = tf.keras.Model(input, output)
+model_input_graph_spec, label_spec = train_set[0].element_spec
+input_graph = tf.keras.layers.Input(type_spec=model_input_graph_spec)
+
+# input = tf.keras.layers.Input(type_spec=spec)
+# update = tfgnn.keras.layers.GraphUpdate(
+#     edge_sets={
+#         "edge": tfgnn.keras.layers.EdgeSetUpdate(
+#             next_state=MultiplyNodeEdge(edge_feature="edge_weight"),
+#             edge_input_feature=["edge_weight"],
+#         )
+#     },
+#     node_sets={
+#         "players": tfgnn.keras.layers.NodeSetUpdate(
+#             edge_set_inputs={"edge": tfgnn.keras.layers.Pool(tfgnn.TARGET, "sum")},
+#             next_state=tfgnn.keras.layers.NextStateFromConcat(
+#                 tf.keras.layers.Dense(16)
+#             ),
+#         )
+#     },
+# )
+# graph = update(input)
+# hidden = tfgnn.keras.layers.Readout(node_set_name="players")(graph)
+# output = tf.keras.layers.Dense(1, activation="sigmoid")(hidden)
+# model = tf.keras.Model(input, output)
 
 
-# graph = input_graph
-# for x in range(graph_updates):
-#     graph = tfgnn.keras.layers.GraphUpdate(
-#         edge_sets = {'weight': tfgnn.keras.layers.EdgeSetUpdate(
-#             next_state = tfgnn.keras.layers.NextStateFromConcat(
-#                 tf.keras.layers.Dense(64,activation=activations[x])))},
-#         node_sets = {
-#             'players': tfgnn.keras.layers.NodeSetUpdate(  # For node set "author".
-#                 {"weight": tfgnn.keras.layers.SimpleConv(
-#                     tf.keras.layers.Dense(128, "relu"), "mean",
-#                     receiver_tag=tfgnn.SOURCE)},
-#                 tfgnn.keras.layers.NextStateFromConcat(tf.keras.layers.Dense(128)))})(graph)
+graph = input_graph
+for x in range(graph_updates):
+    graph = tfgnn.keras.layers.GraphUpdate(
+        edge_sets = {'weight': tfgnn.keras.layers.EdgeSetUpdate(
+            next_state = tfgnn.keras.layers.NextStateFromConcat(
+                tf.keras.layers.Dense(64,activation=activations[x])))},
+        node_sets = {
+            'players': tfgnn.keras.layers.NodeSetUpdate(  # For node set "author".
+                {"weight": tfgnn.keras.layers.SimpleConv(
+                    tf.keras.layers.Dense(128, "relu"), "mean",
+                    receiver_tag=tfgnn.SOURCE)},
+                tfgnn.keras.layers.NextStateFromConcat(tf.keras.layers.Dense(128)))})(graph)
 
 
 
