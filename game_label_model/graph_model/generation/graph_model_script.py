@@ -8,7 +8,33 @@ import time
 import re
 import random
 
+script_start = time.time()
 
+
+# Argument parsing
+parser = argparse.ArgumentParser()
+parser.add_argument('--number', type=int, default='', help='Model number to train')
+opt = parser.parse_args()
+
+if opt.number == 0:
+    activations = []
+    nodes = []
+elif opt.number == 1:
+    activations = []
+    nodes = []
+elif opt.number == 2:
+    activations = []
+    nodes = []
+elif opt.number == 3:
+    activations = []
+    nodes = []
+elif opt.number == 4:
+    activations = []
+    nodes = []
+
+
+
+# Get a series of labels
 def get_label(index, run, label_tuples, to_predict):
     tuple = label_tuples[index]
     end = False
@@ -21,27 +47,31 @@ def get_label(index, run, label_tuples, to_predict):
             end = True
     return index, run + 1, "NOTHING" if end else convert_label(tuple[0], to_predict)
 
+# Convert the labels into our format for predicts
 def convert_label(label, to_predict):
     for lab in to_predict:
         if label in lab:
             return lab
     return "NOTHING"
 
+# Convert labels to a numeric value
 def label_to_numeric(label, to_predict):
     return to_predict.index(label)
     
-
-
+# File directories
 FILE_DIR = pathlib.Path(__file__).parent
 LABEL_DIR = os.path.join(FILE_DIR, "labels")
 OUT_DIR = os.path.join(FILE_DIR, "outputs")
 
+# Set of different game names
 game_names = ["galleinvorLabels", "221015ramsvcambridge-bip", "2022101cambridgevsale-fc-bip", "20220903cambridgevplymouthnational-1-bip", "cambridge-v-cinderford-bip", "20220917cambridgevtauntonnational-1-bip", "20220910bishops-stortfordvcambridgenational-1-bi", "20220924dmpvcambridge"]
 # game_names = ["220611galleivnor_2_movie-001from0to48000", "220611galleivnor_2_movie-001from48001for15000frames", "220611galleivnor_2_movie-001from63001for 22965 frames", "220611galleivnor_2_movie-001from85966 for 51450 frames", "220611galleivnor_2_movie-001from137417"]
 exists = []
 raw_lists = []
 num_frames = []
+names = []
 
+# Sort out regex of labels
 for name in game_names:
     try:
         labelLocation = os.path.join(LABEL_DIR, name + ".lbl")
@@ -63,8 +93,9 @@ for name in game_names:
         tot += int(frame_match.group())
     raw_lists.append(label_tuples)
     num_frames.append(tot)
+    names.append(name)
 
-
+# Original labels
 LABELS = [
     "NOTHING",
     "CARRY",
@@ -83,6 +114,7 @@ LABELS = [
     "MAUL"    
 ]
 
+# Labels the model is predicting
 LABELS_TO_PREDICT = [
     "CARRY",
     "PASS",
@@ -94,13 +126,16 @@ LABELS_TO_PREDICT = [
     "MAUL"    
 ]
 
+# Custom test-train split ignores "nothing" labels
 split_percent = 0.7
+edges_train = []
+nodes_train = []
+labels_train = []
+edges_val = []
+nodes_val = []
+labels_val = []
 for i in range(0, len(raw_lists)):
     label_tuples = raw_lists[i]
-    train_list_raw = []
-    test_list_raw = []
-    validation_list_raw = []
-    validation_test_list_raw = []
     index = 0
     run = 0
     for j in range(0, num_frames[i]):
@@ -109,15 +144,18 @@ for i in range(0, len(raw_lists)):
         index, run, label = get_label(index, run, label_tuples, LABELS_TO_PREDICT)
         if "NOTHING" not in label:
             if train:
-                train_list_raw.append(j)
-                test_list_raw.append(label)
+                labels_train.append(label)
+                edges_train.append(np.loadtxt(os.path.join(names[i], str(j) + ".txt")))
+                nodes_train.append(np.loadtxt(os.path.join(names[i], str(j) + "_nodes.txt")))
             else:
-                validation_list_raw.append(j)
-                validation_test_list_raw.append(label)
+                labels_val.append(label)
+                edges_val.append(np.loadtxt(os.path.join(names[i], str(j) + ".txt")))
+                nodes_val.append(np.loadtxt(os.path.join(names[i], str(j) + "_nodes.txt")))
 
 
 ######## Graph Model Training
 
+# Necessary imports
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
@@ -129,6 +167,7 @@ import tensorflow as tf
 import tensorflow_gnn as tfgnn
 import pandas as pd
 
+# Graph spec for the model
 graph_tensor_spec = tfgnn.GraphTensorSpec.from_piece_specs(
     context_spec=tfgnn.ContextSpec.from_field_specs(features_spec={
                   'label': tf.TensorSpec(shape=(1,), dtype=tf.int32)
@@ -154,6 +193,7 @@ graph_tensor_spec = tfgnn.GraphTensorSpec.from_piece_specs(
                     'players', 'players'))
     })
 
+# Build a set illustrating adjacencies as two lists
 def build_adjacency(nodes, edges):
     sources = []
     targets = []
@@ -163,46 +203,7 @@ def build_adjacency(nodes, edges):
             targets.append(j)
     return sources, targets
 
-def create_graph_tensor(nodes, edges, labelID):
-    newNodes =[]
-    for i in range(0, len(nodes)):
-        newNodes.append(i)
-    players = tfgnn.NodeSet.from_fields(features={'hidden': newNodes}, sizes=[len(newNodes)])
-
-    shape = edges.shape
-    sources, targets = build_adjacency(nodes, edges)
-    player_adjacency = tfgnn.Adjacency.from_indices(source=('players', tf.cast(sources, dtype=tf.int32)),
-                                                  target=('players', tf.cast(targets, dtype=tf.int32)))
-    edge_set = tfgnn.EdgeSet.from_fields(features = {
-                    'edge_weight': edges.reshape(len(edges) ** 2,1)}, 
-                    adjacency = tfgnn.HyperAdjacency.from_indices(
-                        indices={
-                            tfgnn.SOURCE: ('players', sources),
-                            tfgnn.TARGET: ('players', targets)
-                        }
-                    ), 
-                    sizes = [len(edges) ** 2]
-                    )
-    # edge_set = tfgnn.EdgeSet.from_fields(adjacency=edges, sizes=tf.constant([shape[0], shape[1]]))
-    test_df = pd.DataFrame([labelID], columns = ['label'], dtype = 'int32', index=[0])
-    return tfgnn.GraphTensor.from_pieces(context=tfgnn.Context.from_fields(
-                    features={'label': test_df}, sizes=[len(test_df)]), 
-                    node_sets={'players': tfgnn.NodeSet.from_fields(
-                        features={'hidden': tf.constant(newNodes)}, 
-                        sizes=[len(newNodes)])
-                        }, 
-                    edge_sets={'distances': tfgnn.EdgeSet.from_fields(features = {
-                        'edge_weight': tf.constant(edges.reshape(len(edges) ** 2,1))}, 
-                            adjacency = tfgnn.HyperAdjacency.from_indices(
-                                indices={
-                                    tfgnn.SOURCE: ('players', sources),
-                                    tfgnn.TARGET: ('players', targets)
-                                }
-                            ), 
-                            sizes = [len(edges) ** 2]
-                            )}
-                    )
-
+# Convert the nodes, edges, weights, and label for a graph into the correct format. Stored as a list
 def correct_format(nodes_old, edges_old, label_old):
     nodes = np.arange(len(nodes_old))
     edge_df = pd.DataFrame(columns = ['source', 'dest', 'weight'], dtype='float64')
@@ -218,21 +219,28 @@ def correct_format(nodes_old, edges_old, label_old):
     arr.append(label_df)
     return arr
 
-def create_graph_tensor2(nodes, edges, labelID):
+# Create the graph tensor for a given graph
+# Inputs given as the outputs to the correct_format function
+def create_graph_tensor(nodes, edges, labelID):
     arr = correct_format(nodes, edges, labelID)
     edges_df = arr[1]
     sources = np.array(edges_df['source'], dtype='int32')
     dests = np.array(edges_df['dest'], dtype='int32')
-    weight = np.array(edges_df['weight'])
-    test_df = pd.DataFrame([labelID], columns = ['label'], dtype = 'int32', index=[0])
+    weight = np.array(edges_df['weight'], dtype='float32')
+    node_feats = []
+    for i in range(0, len(nodes)):
+        if i < len(nodes) - 1:
+            node_feats.append([0.0,1.0])
+        else:
+            node_feats.append([1.0,0.0])
 
     g = tfgnn.GraphTensor.from_pieces(
     node_sets = {
-      'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={})},
+      'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={'hidden_state': node_feats})},
     edge_sets = {
       'distances': tfgnn.EdgeSet.from_fields(
          sizes=[len(nodes) * len(nodes)],
-         features={'edge_weight' : weight},
+         features={'hidden_state' : weight},
          adjacency=tfgnn.Adjacency.from_indices(
            source=('players', sources),
            target=('players', dests)))},
@@ -243,89 +251,21 @@ def create_graph_tensor2(nodes, edges, labelID):
     
     return g
 
-def batch_merge(graph):
-    graph = graph.merge_batch_to_components()
-    node_features = graph.node_sets['players'].get_features_dict()
-    edge_features = graph.edge_sets['distances'].get_features_dict()
-    
-    context_features = graph.context.get_features_dict()
-    label = context_features.pop('label')
-    new_graph = graph.replace_features(context=context_features)
-    return new_graph, label
-
-def decode_fn(record_bytes):
-#   graph = tfgnn.parse_single_example(
-#       graph_tensor_spec, record_bytes, validate=True)
-
-  # extract label from context and remove from input graph
-  context_features = graph.context.get_features_dict()
-  label = context_features.pop('label')
-  new_graph = graph.replace_features(context=context_features)
-
-  return new_graph, label
-
-
 
 ###### Running gnn training ######
 
-# Load data
-edges_1 = np.loadtxt("1.txt")
-nodes_1 = np.loadtxt("1_nodes.txt", dtype=str)
-edges_2 = np.loadtxt("2.txt")
-nodes_2 = np.loadtxt("2_nodes.txt", dtype=str)
+# Train tensors
+train_tensors = []
+for i in range(0, len(edges_train)):
+    tensor = create_graph_tensor(nodes_train[i], edges_train[i], label_to_numeric(labels_train[i], LABELS_TO_PREDICT))
 
-labels = [LABELS_TO_PREDICT[0], LABELS_TO_PREDICT[1]]
-
-tensor_1 = create_graph_tensor2(nodes_1, edges_1, label_to_numeric(labels[0], LABELS_TO_PREDICT))
-tensor_2 = create_graph_tensor2(nodes_2, edges_2, label_to_numeric(labels[1], LABELS_TO_PREDICT))
-
-graphs_old = [tensor_1, tensor_2]
-graphs = []
+# Validation tensors
+val_tensors = []
+for i in range(0, len(edges_val)):
+    tensor = create_graph_tensor(nodes_val[i], edges_val[i], label_to_numeric(labels_val[i], LABELS_TO_PREDICT))
 
 
-
-
-# Thomas stuff here
-
-# def make_tensors(dfs):
-
-#     # print(dfs)
-#     # print(dfs[0])
-#     # print(np.array(dfs[0]))
-
-#     node_tensor = tf.convert_to_tensor(np.array(dfs[0]))
-#     edge_tensor = tf.convert_to_tensor(np.array(dfs[1]))
-#     label_tensor = tf.convert_to_tensor(np.array(dfs[2]))
-#     return node_tensor, edge_tensor, label_tensor
-  
-
-# def correct_format(nodes_old, edges_old, label_old):
-#     nodes = np.arange(len(nodes_old))
-#     edge_df = pd.DataFrame(columns = ['source', 'dest', 'weight'], dtype='float64')
-#     for i in range(0, len(edges_old)):
-#         for j in range(0, len(edges_old[0])):
-#             temp_df = pd.DataFrame([[i, j, edges_old[i][j]]],columns = ['source', 'dest', 'weight'], dtype='float64')
-#             edge_df = pd.concat([edge_df, temp_df], ignore_index=True)
-#     label_df = pd.DataFrame(columns = ['label'], dtype = 'int32', index=[0])
-#     label_df['label'] = label_old
-#     arr = []
-#     arr.append(nodes)
-#     arr.append(edge_df)
-#     arr.append(label_df)
-#     return arr
-
-# def make_all_tensors(nodes_arr, edges_arr, labels):
-#     tensors = []
-#     for i in range(0, len(nodes_arr)):
-#         arr = correct_format(nodes_arr[i], edges_arr[i], labels[i])
-#         n_tensor, e_tensor, l_tensor = make_tensors(arr)
-#         temp = []
-#         temp.append(n_tensor)
-#         temp.append(e_tensor)
-#         temp.append(l_tensor)
-#         tensors.append(temp)
-#     return tensors
-
+# Save the graph tensors into one file
 def write_tensors(tensors, filename):
     with tf.io.TFRecordWriter(filename) as writer:
         for i in range(0, len(tensors)):
@@ -333,87 +273,40 @@ def write_tensors(tensors, filename):
             example = tfgnn.write_example(graph)
             writer.write(example.SerializeToString())
 
-
-
-# nodes = [nodes_1, nodes_2]
-# edges = [edges_1, edges_2]
-# tensors = make_all_tensors(nodes, edges, labels)
-# print("made tensors")
-
-# g_tensors = []
-# for ts in tensors:
-#     nodes = ts[0]
-#     edges = ts[1]
-#     label = ts[2]
-
-#     g_tensor = tfgnn.GraphTensor.from_pieces(context=tfgnn.Context.from_fields(
-#                     features={'label': label}), 
-#                     node_sets={'players': tfgnn.NodeSet.from_fields(
-#                         features={'hidden': nodes})}, 
-#                     edge_sets={'distances': tfgnn.EdgeSet.from_fields(features = {
-#                         'edge_weight': edges})}
-#                     )
-#     g_tensors.append(g_tensor)
-
-
-# Thomas stuff ends
-
-
-
-
-# Map graphs to correct format
-# for graph in graphs_old:
-#     g, l = batch_merge(graph)
-#     graphs.append((g, l))
-
-# # Create Datasets
-# BATCH_SIZE = 32
-# def create_dataset(graphs, func):
-#     print("creating datasets")
-#     print(len(graphs))
-#     datasets= []
-#     for graph in graphs:
-#         dataset = tf.data.Dataset.from_tensors(graph)
-#         dataset = dataset.batch(BATCH_SIZE).repeat()
-#         datasets.append(dataset.map(func))
-#     return datasets
-
-# train_ds = create_dataset(graphs_old, decode_fn)
+# Filenames for train and validation sets
 filename_train = 'train.tfrecords'
 filename_validate = 'val.tfrecords'
 
+# Save the graph tensors
+write_tensors(train_tensors, filename_train)
+write_tensors(val_tensors, filename_validate)
 
-write_tensors([graphs_old[0]], filename_train)
-write_tensors(graphs_old, filename_validate)
+# Obtain file paths
+# train_path = os.path.join(os.getcwd(), filename_train)
+# val_path = os.path.join(os.getcwd(), filename_validate)
+train_path = filename_train
+val_path = filename_validate
 
-
-train_path = os.path.join(os.getcwd(), 'mutag', filename_train)
-val_path = os.path.join(os.getcwd(), 'mutag', filename_validate)
-
+# Function to reload the data back in in the correct format
 def decode_fn(record_bytes):
   graph = tfgnn.parse_single_example(
       graph_tensor_spec, record_bytes, validate=True)
 
   # extract label from context and remove from input graph
   context_features = graph.context.get_features_dict()
+  print(context_features)
   label = context_features.pop('label')
+  print(context_features)
   new_graph = graph.replace_features(context=context_features)
 
   return new_graph, label
 
+# Load datasets from file
 train_ds = tf.data.TFRecordDataset([train_path]).map(decode_fn)
 val_ds = tf.data.TFRecordDataset([val_path]).map(decode_fn)
 
-g, y = train_ds.take(1).get_single_element()
-print(g)
-print(y)
 
-
-# Batch the datasets
-# batch_size = 32
-# train_ds_batched = train_ds.batch(batch_size=batch_size).repeat()
-# val_ds_batched = val_ds.batch(batch_size=batch_size)
-
+# Set up batches for training
 batch_size = 32
 train_ds_batched = train_ds.batch(batch_size=batch_size).repeat()
 val_ds_batched = val_ds.batch(batch_size=batch_size)
@@ -521,12 +414,33 @@ model.compile(tf.keras.optimizers.Adam(), loss=loss, metrics=metrics)
 print(model.summary())
 
 # Train model
+
+start = time.time()
 history = model.fit(train_ds_batched,
                     steps_per_epoch=10,
                     epochs=200,
                     validation_data=val_ds_batched)
+end = time.time()
 
+modelName = "Test"
+model.save(modelName)
+print("\n*** SAVED MODEL {} ***".format(modelName))
+
+print("\n\n==================== MODEL STATS ====================")
+print("     > Model Name:              {}".format(modelName))
+print("     > Training Time:           {} seconds".format(round(end - start, 2)))
 for k, hist in history.history.items():
-  plt.plot(hist)
-  plt.title(k)
-  plt.show()
+    print("     > ", end = "")
+    print(k, end =": ")
+    print(" " * (23 - len(k)), end = "")
+    print(round(hist[-1], 8))
+print("=====================================================")
+
+script_end = time.time()
+print("\n     Total Time Elapsed: {} seconds".format(round(script_end - script_start, 2)))
+
+# For matplotlib graph outputs
+# for k, hist in history.history.items():
+#   plt.plot(hist)
+#   plt.title(k)
+#   plt.show()
