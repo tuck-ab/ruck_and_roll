@@ -123,7 +123,7 @@ tf.get_logger().setLevel('ERROR')
 
 import os
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow_gnn as tfgnn
@@ -147,7 +147,7 @@ graph_tensor_spec = tfgnn.GraphTensorSpec.from_piece_specs(
             tfgnn.EdgeSetSpec.from_field_specs(
                 features_spec={
                     tfgnn.HIDDEN_STATE:
-                        tf.TensorSpec((None, 50), tf.float32)
+                        tf.TensorSpec((None, 1), tf.float32)
                 },
                 sizes_spec=tf.TensorSpec((1,), tf.int32),
                 adjacency_spec=tfgnn.AdjacencySpec.from_incident_node_sets(
@@ -203,6 +203,46 @@ def create_graph_tensor(nodes, edges, labelID):
                             )}
                     )
 
+def correct_format(nodes_old, edges_old, label_old):
+    nodes = np.arange(len(nodes_old))
+    edge_df = pd.DataFrame(columns = ['source', 'dest', 'weight'], dtype='float64')
+    for i in range(0, len(edges_old)):
+        for j in range(0, len(edges_old[0])):
+            temp_df = pd.DataFrame([[i, j, edges_old[i][j]]],columns = ['source', 'dest', 'weight'], dtype='float64')
+            edge_df = pd.concat([edge_df, temp_df], ignore_index=True)
+    label_df = pd.DataFrame(columns = ['label'], dtype = 'int32', index=[0])
+    label_df['label'] = label_old
+    arr = []
+    arr.append(nodes)
+    arr.append(edge_df)
+    arr.append(label_df)
+    return arr
+
+def create_graph_tensor2(nodes, edges, labelID):
+    arr = correct_format(nodes, edges, labelID)
+    edges_df = arr[1]
+    sources = np.array(edges_df['source'], dtype='int32')
+    dests = np.array(edges_df['dest'], dtype='int32')
+    weight = np.array(edges_df['weight'])
+    test_df = pd.DataFrame([labelID], columns = ['label'], dtype = 'int32', index=[0])
+
+    g = tfgnn.GraphTensor.from_pieces(
+    node_sets = {
+      'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={})},
+    edge_sets = {
+      'distances': tfgnn.EdgeSet.from_fields(
+         sizes=[len(nodes) * len(nodes)],
+         features={'edge_weight' : weight},
+         adjacency=tfgnn.Adjacency.from_indices(
+           source=('players', sources),
+           target=('players', dests)))},
+    context =
+        tfgnn.Context.from_fields(
+            features={'label': np.array(arr[2])}, sizes=[1]
+        ))
+    
+    return g
+
 def batch_merge(graph):
     graph = graph.merge_batch_to_components()
     node_features = graph.node_sets['players'].get_features_dict()
@@ -236,30 +276,133 @@ nodes_2 = np.loadtxt("2_nodes.txt", dtype=str)
 
 labels = [LABELS_TO_PREDICT[0], LABELS_TO_PREDICT[1]]
 
-tensor_1 = create_graph_tensor(nodes_1, edges_1, label_to_numeric(labels[0], LABELS_TO_PREDICT))
-tensor_2 = create_graph_tensor(nodes_2, edges_2, label_to_numeric(labels[1], LABELS_TO_PREDICT))
+tensor_1 = create_graph_tensor2(nodes_1, edges_1, label_to_numeric(labels[0], LABELS_TO_PREDICT))
+tensor_2 = create_graph_tensor2(nodes_2, edges_2, label_to_numeric(labels[1], LABELS_TO_PREDICT))
 
 graphs_old = [tensor_1, tensor_2]
 graphs = []
 
+
+
+
+# Thomas stuff here
+
+# def make_tensors(dfs):
+
+#     # print(dfs)
+#     # print(dfs[0])
+#     # print(np.array(dfs[0]))
+
+#     node_tensor = tf.convert_to_tensor(np.array(dfs[0]))
+#     edge_tensor = tf.convert_to_tensor(np.array(dfs[1]))
+#     label_tensor = tf.convert_to_tensor(np.array(dfs[2]))
+#     return node_tensor, edge_tensor, label_tensor
+  
+
+# def correct_format(nodes_old, edges_old, label_old):
+#     nodes = np.arange(len(nodes_old))
+#     edge_df = pd.DataFrame(columns = ['source', 'dest', 'weight'], dtype='float64')
+#     for i in range(0, len(edges_old)):
+#         for j in range(0, len(edges_old[0])):
+#             temp_df = pd.DataFrame([[i, j, edges_old[i][j]]],columns = ['source', 'dest', 'weight'], dtype='float64')
+#             edge_df = pd.concat([edge_df, temp_df], ignore_index=True)
+#     label_df = pd.DataFrame(columns = ['label'], dtype = 'int32', index=[0])
+#     label_df['label'] = label_old
+#     arr = []
+#     arr.append(nodes)
+#     arr.append(edge_df)
+#     arr.append(label_df)
+#     return arr
+
+# def make_all_tensors(nodes_arr, edges_arr, labels):
+#     tensors = []
+#     for i in range(0, len(nodes_arr)):
+#         arr = correct_format(nodes_arr[i], edges_arr[i], labels[i])
+#         n_tensor, e_tensor, l_tensor = make_tensors(arr)
+#         temp = []
+#         temp.append(n_tensor)
+#         temp.append(e_tensor)
+#         temp.append(l_tensor)
+#         tensors.append(temp)
+#     return tensors
+
+def write_tensors(tensors, filename):
+    with tf.io.TFRecordWriter(filename) as writer:
+        for i in range(0, len(tensors)):
+            graph = tensors[i]
+            example = tfgnn.write_example(graph)
+            writer.write(example.SerializeToString())
+
+
+
+# nodes = [nodes_1, nodes_2]
+# edges = [edges_1, edges_2]
+# tensors = make_all_tensors(nodes, edges, labels)
+# print("made tensors")
+
+# g_tensors = []
+# for ts in tensors:
+#     nodes = ts[0]
+#     edges = ts[1]
+#     label = ts[2]
+
+#     g_tensor = tfgnn.GraphTensor.from_pieces(context=tfgnn.Context.from_fields(
+#                     features={'label': label}), 
+#                     node_sets={'players': tfgnn.NodeSet.from_fields(
+#                         features={'hidden': nodes})}, 
+#                     edge_sets={'distances': tfgnn.EdgeSet.from_fields(features = {
+#                         'edge_weight': edges})}
+#                     )
+#     g_tensors.append(g_tensor)
+
+
+# Thomas stuff ends
+
+
+
+
 # Map graphs to correct format
-for graph in graphs_old:
-    g, l = batch_merge(graph)
-    graphs.append((g, l))
+# for graph in graphs_old:
+#     g, l = batch_merge(graph)
+#     graphs.append((g, l))
 
-# Create Datasets
-BATCH_SIZE = 32
-def create_dataset(graphs, func):
-    print("creating datasets")
-    print(len(graphs))
-    datasets= []
-    for graph in graphs:
-        dataset = tf.data.Dataset.from_tensors(graph)
-        dataset = dataset.batch(BATCH_SIZE).repeat()
-        datasets.append(dataset.map(func))
-    return datasets
+# # Create Datasets
+# BATCH_SIZE = 32
+# def create_dataset(graphs, func):
+#     print("creating datasets")
+#     print(len(graphs))
+#     datasets= []
+#     for graph in graphs:
+#         dataset = tf.data.Dataset.from_tensors(graph)
+#         dataset = dataset.batch(BATCH_SIZE).repeat()
+#         datasets.append(dataset.map(func))
+#     return datasets
 
-train_ds = create_dataset(graphs_old, decode_fn)
+# train_ds = create_dataset(graphs_old, decode_fn)
+filename_train = 'train.tfrecords'
+filename_validate = 'val.tfrecords'
+
+
+write_tensors([graphs_old[0]], filename_train)
+write_tensors(graphs_old, filename_validate)
+
+
+train_path = os.path.join(os.getcwd(), 'mutag', filename_train)
+val_path = os.path.join(os.getcwd(), 'mutag', filename_validate)
+
+def decode_fn(record_bytes):
+  graph = tfgnn.parse_single_example(
+      graph_tensor_spec, record_bytes, validate=True)
+
+  # extract label from context and remove from input graph
+  context_features = graph.context.get_features_dict()
+  label = context_features.pop('label')
+  new_graph = graph.replace_features(context=context_features)
+
+  return new_graph, label
+
+train_ds = tf.data.TFRecordDataset([train_path]).map(decode_fn)
+val_ds = tf.data.TFRecordDataset([val_path]).map(decode_fn)
 
 g, y = train_ds.take(1).get_single_element()
 print(g)
@@ -271,6 +414,9 @@ print(y)
 # train_ds_batched = train_ds.batch(batch_size=batch_size).repeat()
 # val_ds_batched = val_ds.batch(batch_size=batch_size)
 
+batch_size = 32
+train_ds_batched = train_ds.batch(batch_size=batch_size).repeat()
+val_ds_batched = val_ds.batch(batch_size=batch_size)
 
 # Build the GNN model
 def _build_model(
@@ -338,8 +484,8 @@ def _build_model(
   for i in range(num_message_passing):
     graph = tfgnn.keras.layers.GraphUpdate(
         node_sets={
-            "atoms": tfgnn.keras.layers.NodeSetUpdate(
-                {"bonds": tfgnn.keras.layers.SimpleConv(
+            "players": tfgnn.keras.layers.NodeSetUpdate(
+                {"distances": tfgnn.keras.layers.SimpleConv(
                      sender_edge_feature=tfgnn.HIDDEN_STATE,
                      message_fn=dense(message_dim),
                      reduce_type="sum",
@@ -353,7 +499,7 @@ def _build_model(
   # input graph of the batch, so the first dimension of the result corresponds
   # to the batch dimension of the inputs (same as the labels).
   readout_features = tfgnn.keras.layers.Pool(
-      tfgnn.CONTEXT, "mean", node_set_name="atoms")(graph)
+      tfgnn.CONTEXT, "mean", node_set_name="players")(graph)
 
   # Put a linear classifier on top (not followed by dropout).
   logits = tf.keras.layers.Dense(1)(readout_features)
@@ -375,7 +521,12 @@ model.compile(tf.keras.optimizers.Adam(), loss=loss, metrics=metrics)
 print(model.summary())
 
 # Train model
-# history = model.fit(train_ds_batched,
-#                     steps_per_epoch=10,
-#                     epochs=200,
-#                     validation_data=val_ds_batched)
+history = model.fit(train_ds_batched,
+                    steps_per_epoch=10,
+                    epochs=200,
+                    validation_data=val_ds_batched)
+
+for k, hist in history.history.items():
+  plt.plot(hist)
+  plt.title(k)
+  plt.show()
