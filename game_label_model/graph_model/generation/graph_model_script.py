@@ -19,25 +19,25 @@ opt = parser.parse_args()
 if opt.number == 0:
     activations = ["relu", "relu", "linear"]
     dimensions = [128, 128, 64]
-    epochs = 2
+    epochs = 100
 elif opt.number == 1:
-    activations = ["relu", "relu", "linear"]
+    activations = ["relu", "linear", "linear"]
     dimensions = [128, 128, 64]
-    epochs = 2
+    epochs = 100
 elif opt.number == 2:
-    activations = ["relu", "relu", "linear"]
+    activations = ["linear", "linear", "linear"]
     dimensions = [128, 128, 64]
-    epochs = 2
+    epochs = 100
 elif opt.number == 3:
-    activations = ["relu", "relu", "linear"]
+    activations = ["relu", "sigmoid", "elu"]
     dimensions = [128, 128, 64]
-    epochs = 2
+    epochs = 100
 elif opt.number == 4:
-    activations = ["relu", "relu", "linear"]
+    activations = ["relu", "sigmoid", "swish"]
     dimensions = [128, 128, 64]
-    epochs = 2
+    epochs = 100
 
-
+print("Beginning Script {}".format(opt.number))
 
 # Get a series of labels
 def get_label(index, run, label_tuples, to_predict):
@@ -76,6 +76,7 @@ raw_lists = []
 num_frames = []
 names = []
 
+print("Loading labels")
 # Sort out regex of labels
 for name in game_names:
     try:
@@ -102,6 +103,7 @@ for name in game_names:
         names.append("220611galleivnor_2_movie-001")
     else:
         names.append(name)
+print("Labels Loaded")
 
 # Original labels
 LABELS = [
@@ -134,6 +136,7 @@ LABELS_TO_PREDICT = [
     "MAUL"    
 ]
 
+print("Loading node and edge files. Creating Test-Train Split")
 # Custom test-train split ignores "nothing" labels
 split_percent = 0.7
 edges_train = []
@@ -153,13 +156,13 @@ for i in range(0, len(raw_lists)):
         if "NOTHING" not in label:
             if train:
                 labels_train.append(label)
-                edges_train.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
-                nodes_train.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + ".txt")))
+                edges_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
+                nodes_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
             else:
                 labels_val.append(label)
-                edges_val.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
-                nodes_val.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + ".txt")))
-
+                edges_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
+                nodes_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
+print("Test-Train Split Made")
 
 ######## Graph Model Training
 
@@ -262,12 +265,14 @@ def create_graph_tensor(nodes, edges, labelID):
 
 ###### Running gnn training ######
 
+print("Creating train tensors")
 # Train tensors
 train_tensors = []
 for i in range(0, len(edges_train)):
     tensor = create_graph_tensor(nodes_train[i], edges_train[i], label_to_numeric(labels_train[i], LABELS_TO_PREDICT))
     train_tensors.append(tensor)
 
+print("Creating validation tensors")
 # Validation tensors
 val_tensors = []
 for i in range(0, len(edges_val)):
@@ -284,13 +289,14 @@ def write_tensors(tensors, filename):
             writer.write(example.SerializeToString())
 
 # Filenames for train and validation sets
-filename_train = 'train.tfrecords'
-filename_validate = 'val.tfrecords'
+filename_train = os.path.join(OUT_DIR, 'train.tfrecords')
+filename_validate = os.path.join(OUT_DIR, 'val.tfrecords')
 
+print("Writing tensors")
 # Save the graph tensors
 write_tensors(train_tensors, filename_train)
 write_tensors(val_tensors, filename_validate)
-
+print("Tensors written")
 # Obtain file paths
 # train_path = os.path.join(os.getcwd(), filename_train)
 # val_path = os.path.join(os.getcwd(), filename_validate)
@@ -311,11 +317,12 @@ def decode_fn(record_bytes):
 
   return new_graph, label
 
+print("Loading tensors")
 # Load datasets from file
 train_ds = tf.data.TFRecordDataset([train_path]).map(decode_fn)
 val_ds = tf.data.TFRecordDataset([val_path]).map(decode_fn)
 
-
+print("Batching tensors")
 # Set up batches for training
 batch_size = 32
 train_ds_batched = train_ds.batch(batch_size=batch_size).repeat()
@@ -410,6 +417,7 @@ def _build_model(
   # Build a Keras Model for the transformation from input_graph to logits.
   return tf.keras.Model(inputs=[input_graph], outputs=[logits])
 
+print("Creating model")
 # Define loss metrics
 model_input_graph_spec, label_spec = train_ds.element_spec
 del label_spec # Unused.
@@ -424,7 +432,7 @@ model.compile(tf.keras.optimizers.Adam(), loss=loss, metrics=metrics)
 print(model.summary())
 
 # Train model
-
+print("Training model")
 start = time.time()
 history = model.fit(train_ds_batched,
                     steps_per_epoch=10,
@@ -433,7 +441,7 @@ history = model.fit(train_ds_batched,
 end = time.time()
 
 modelName = str(opt.number)
-model.save(modelName)
+model.save(os.path.join(OUT_DIR, modelName))
 print("\n*** SAVED MODEL {} ***".format(modelName))
 
 print("\n\n==================== MODEL STATS ====================")
@@ -444,6 +452,10 @@ for k, hist in history.history.items():
     print(k, end =": ")
     print(" " * (23 - len(k)), end = "")
     print(round(hist[-1], 8))
+    plt.clf()
+    plt.plot(hist)
+    plt.title(k)
+    plt.savefig(os.path.join(OUT_DIR, modelName + "_" + k + '.pdf'))
 print("=====================================================")
 
 script_end = time.time()
