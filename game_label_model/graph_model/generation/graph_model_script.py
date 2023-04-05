@@ -154,11 +154,11 @@ for i in range(0, len(raw_lists)):
             if train:
                 labels_train.append(label)
                 edges_train.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
-                nodes_train.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + "_nodes.txt")))
+                nodes_train.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + ".txt")))
             else:
                 labels_val.append(label)
                 edges_val.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
-                nodes_val.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + "_nodes.txt")))
+                nodes_val.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + ".txt")))
 
 
 ######## Graph Model Training
