@@ -17,20 +17,25 @@ parser.add_argument('--number', type=int, default='', help='Model number to trai
 opt = parser.parse_args()
 
 if opt.number == 0:
-    activations = []
-    nodes = []
+    activations = ["relu", "relu", "linear"]
+    dimensions = [128, 128, 64]
+    epochs = 2
 elif opt.number == 1:
-    activations = []
-    nodes = []
+    activations = ["relu", "relu", "linear"]
+    dimensions = [128, 128, 64]
+    epochs = 2
 elif opt.number == 2:
-    activations = []
-    nodes = []
+    activations = ["relu", "relu", "linear"]
+    dimensions = [128, 128, 64]
+    epochs = 2
 elif opt.number == 3:
-    activations = []
-    nodes = []
+    activations = ["relu", "relu", "linear"]
+    dimensions = [128, 128, 64]
+    epochs = 2
 elif opt.number == 4:
-    activations = []
-    nodes = []
+    activations = ["relu", "relu", "linear"]
+    dimensions = [128, 128, 64]
+    epochs = 2
 
 
 
@@ -93,7 +98,10 @@ for name in game_names:
         tot += int(frame_match.group())
     raw_lists.append(label_tuples)
     num_frames.append(tot)
-    names.append(name)
+    if name == game_names[0]:
+        names.append("220611galleivnor_2_movie-001")
+    else:
+        names.append(name)
 
 # Original labels
 LABELS = [
@@ -145,12 +153,12 @@ for i in range(0, len(raw_lists)):
         if "NOTHING" not in label:
             if train:
                 labels_train.append(label)
-                edges_train.append(np.loadtxt(os.path.join(names[i], str(j) + ".txt")))
-                nodes_train.append(np.loadtxt(os.path.join(names[i], str(j) + "_nodes.txt")))
+                edges_train.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
+                nodes_train.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + "_nodes.txt")))
             else:
                 labels_val.append(label)
-                edges_val.append(np.loadtxt(os.path.join(names[i], str(j) + ".txt")))
-                nodes_val.append(np.loadtxt(os.path.join(names[i], str(j) + "_nodes.txt")))
+                edges_val.append(np.loadtxt(os.path.join("outputs", names[i], "edges", str(j) + ".txt")))
+                nodes_val.append(np.loadtxt(os.path.join("outputs", names[i], "nodes", str(j) + "_nodes.txt")))
 
 
 ######## Graph Model Training
@@ -258,11 +266,13 @@ def create_graph_tensor(nodes, edges, labelID):
 train_tensors = []
 for i in range(0, len(edges_train)):
     tensor = create_graph_tensor(nodes_train[i], edges_train[i], label_to_numeric(labels_train[i], LABELS_TO_PREDICT))
+    train_tensors.append(tensor)
 
 # Validation tensors
 val_tensors = []
 for i in range(0, len(edges_val)):
     tensor = create_graph_tensor(nodes_val[i], edges_val[i], label_to_numeric(labels_val[i], LABELS_TO_PREDICT))
+    val_tensors.append(tensor)
 
 
 # Save the graph tensors into one file
@@ -374,7 +384,7 @@ def _build_model(
   #    node state with the summed edge inputs to compute the new node state.
   # Each iteration of the for-loop creates new Keras Layer objects, so each
   # round of updates gets its own trainable variables.
-  for i in range(num_message_passing):
+  for i in range(len(activations)):
     graph = tfgnn.keras.layers.GraphUpdate(
         node_sets={
             "players": tfgnn.keras.layers.NodeSetUpdate(
@@ -383,7 +393,7 @@ def _build_model(
                      message_fn=dense(message_dim),
                      reduce_type="sum",
                      receiver_tag=tfgnn.TARGET)},
-                tfgnn.keras.layers.NextStateFromConcat(dense(next_state_dim)))}
+                tfgnn.keras.layers.NextStateFromConcat(dense(dimensions[i], activations[i])))}
     )(graph)
 
   # After the GNN has computed a context-aware representation of the "atoms",
@@ -418,11 +428,11 @@ print(model.summary())
 start = time.time()
 history = model.fit(train_ds_batched,
                     steps_per_epoch=10,
-                    epochs=200,
+                    epochs=epochs,
                     validation_data=val_ds_batched)
 end = time.time()
 
-modelName = "Test"
+modelName = str(opt.number)
 model.save(modelName)
 print("\n*** SAVED MODEL {} ***".format(modelName))
 
