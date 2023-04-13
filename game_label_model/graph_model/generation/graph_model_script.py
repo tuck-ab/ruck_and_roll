@@ -16,26 +16,30 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--number', type=int, default='', help='Model number to train')
 opt = parser.parse_args()
 
-if opt.number == 0:
-    activations = ["relu", "relu", "linear"]
-    dimensions = [128, 128, 64]
-    epochs = 100
-elif opt.number == 1:
-    activations = ["relu", "linear", "linear"]
-    dimensions = [128, 128, 64]
-    epochs = 100
-elif opt.number == 2:
-    activations = ["linear", "linear", "linear"]
-    dimensions = [128, 128, 64]
-    epochs = 100
-elif opt.number == 3:
-    activations = ["relu", "sigmoid", "elu"]
-    dimensions = [128, 128, 64]
-    epochs = 100
-elif opt.number == 4:
-    activations = ["relu", "sigmoid", "swish"]
-    dimensions = [128, 128, 64]
-    epochs = 100
+if opt.number == 27:
+    activations = ["relu", "linear", "sigmoid", "relu", "linear", "sigmoid"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
+elif opt.number == 28:
+    activations = ["relu", "sigmoid", "linear", "relu", "sigmoid", "linear"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
+elif opt.number == 29:
+    activations = ["relu", "linear", "sigmoid", "gelu", "relu", "sigmoid"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
+elif opt.number == 30:
+    activations = ["relu", "sigmoid", "elu", "relu", "sigmoid", "elu"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
+elif opt.number == 33:
+    activations = ["relu", "gelu", "selu", "relu", "gelu", "selu"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
+elif opt.number == 32:
+    activations = ["relu", "gelu", "sigmoid", "relu", "swish", "gelu"]
+    dimensions = [256, 256, 256, 128, 128, 128]
+    epochs = 40
 
 print("Beginning Script {}".format(opt.number))
 
@@ -55,7 +59,7 @@ def get_label(index, run, label_tuples, to_predict):
 # Convert the labels into our format for predicts
 def convert_label(label, to_predict):
     for lab in to_predict:
-        if label in lab:
+        if lab in label:
             return lab
     return "NOTHING"
 
@@ -136,6 +140,31 @@ LABELS_TO_PREDICT = [
     "MAUL"    
 ]
 
+myDict = {
+    "CARRY" : 0,
+    "PASS" : 0,
+    "KICK" : 0,
+    "RUCK" : 0,
+    "TACKLE" : 0,
+    "LINEOUT" : 0,
+    "SCRUM" : 0,
+    "MAUL" : 0,
+    "NOTHING" : 0 }
+tot = 0
+for i in range(0, len(raw_lists)):
+    label_tuples = raw_lists[i]
+    index = 0
+    run = 0
+    for j in range(0, num_frames[i]):
+        _, _, next_label = get_label(index, run + 1, label_tuples, LABELS_TO_PREDICT)
+        index, run, label = get_label(index, run, label_tuples, LABELS_TO_PREDICT)
+        if label not in "NOTHING":
+            myDict[label] += 1
+            tot += 1
+
+ratio_using = 0.025
+frames_per_action = (tot * ratio_using) / len(LABELS_TO_PREDICT)
+
 print("Loading node and edge files. Creating Test-Train Split")
 # Custom test-train split ignores "nothing" labels
 split_percent = 0.7
@@ -145,6 +174,7 @@ labels_train = []
 edges_val = []
 nodes_val = []
 labels_val = []
+true_labels = []
 for i in range(0, len(raw_lists)):
     label_tuples = raw_lists[i]
     index = 0
@@ -154,14 +184,18 @@ for i in range(0, len(raw_lists)):
         _, _, next_label = get_label(index, run + 1, label_tuples, LABELS_TO_PREDICT)
         index, run, label = get_label(index, run, label_tuples, LABELS_TO_PREDICT)
         if "NOTHING" not in label:
-            if train:
-                labels_train.append(label)
-                edges_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
-                nodes_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
-            else:
-                labels_val.append(label)
-                edges_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
-                nodes_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
+            action_frames = myDict[label]
+            rand_num = random.uniform(0,1)
+            if rand_num <= (frames_per_action / action_frames):
+                if train:
+                    labels_train.append(label)
+                    edges_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
+                    nodes_train.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
+                else:
+                    labels_val.append(label)
+                    true_labels.append(label_to_numeric(label, LABELS_TO_PREDICT))
+                    edges_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "edges", str(j) + ".txt")))
+                    nodes_val.append(np.loadtxt(os.path.join(OUT_DIR, names[i], "nodes", str(j) + ".txt"), dtype=str))
 print("Test-Train Split Made")
 
 ######## Graph Model Training
@@ -181,7 +215,7 @@ import pandas as pd
 # Graph spec for the model
 graph_tensor_spec = tfgnn.GraphTensorSpec.from_piece_specs(
     context_spec=tfgnn.ContextSpec.from_field_specs(features_spec={
-                  'label': tf.TensorSpec(shape=(1,), dtype=tf.int32)
+                  'label': tf.TensorSpec(shape=(len(LABELS_TO_PREDICT),), dtype=tf.int32)
     }),
     node_sets_spec={
         'players':
@@ -244,7 +278,9 @@ def create_graph_tensor(nodes, edges, labelID):
             node_feats.append([0.0,1.0])
         else:
             node_feats.append([1.0,0.0])
-
+    label_matrix = np.zeros(len(LABELS_TO_PREDICT))
+    label_matrix[labelID] = 1
+    label_matrix = label_matrix.astype('int64')
     g = tfgnn.GraphTensor.from_pieces(
     node_sets = {
       'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={'hidden_state': node_feats})},
@@ -257,7 +293,7 @@ def create_graph_tensor(nodes, edges, labelID):
            target=('players', dests)))},
     context =
         tfgnn.Context.from_fields(
-            features={'label': np.array(arr[2])}, sizes=[1]
+            features={'label': label_matrix}, sizes=[len(label_matrix)]
         ))
     
     return g
@@ -332,10 +368,10 @@ val_ds_batched = val_ds.batch(batch_size=batch_size)
 def _build_model(
     graph_tensor_spec,
     # Dimensions of initial states.
-    node_dim=16,
-    edge_dim=16,
+    node_dim=50,
+    edge_dim=256,
     # Dimensions for message passing.
-    message_dim=64,
+    message_dim=256,
     next_state_dim=64,
     # Dimension for the logits.
     num_classes=2,
@@ -343,7 +379,7 @@ def _build_model(
     num_message_passing=3,
     # Other hyperparameters.
     l2_regularization=5e-4,
-    dropout_rate=0.5,
+    dropout_rate=0,
 ):
   # Model building with Keras's Functional API starts with an input object
   # (a placeholder for the eventual inputs). Here is how it works for
@@ -397,7 +433,7 @@ def _build_model(
             "players": tfgnn.keras.layers.NodeSetUpdate(
                 {"distances": tfgnn.keras.layers.SimpleConv(
                      sender_edge_feature=tfgnn.HIDDEN_STATE,
-                     message_fn=dense(message_dim),
+                     message_fn=dense(message_dim, activations[i]),
                      reduce_type="sum",
                      receiver_tag=tfgnn.TARGET)},
                 tfgnn.keras.layers.NextStateFromConcat(dense(dimensions[i], activations[i])))}
@@ -412,7 +448,7 @@ def _build_model(
       tfgnn.CONTEXT, "mean", node_set_name="players")(graph)
 
   # Put a linear classifier on top (not followed by dropout).
-  logits = tf.keras.layers.Dense(1)(readout_features)
+  logits = tf.keras.layers.Dense(8)(readout_features)
 
   # Build a Keras Model for the transformation from input_graph to logits.
   return tf.keras.Model(inputs=[input_graph], outputs=[logits])
@@ -423,9 +459,9 @@ model_input_graph_spec, label_spec = train_ds.element_spec
 del label_spec # Unused.
 model = _build_model(model_input_graph_spec)
 
-loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-metrics = [tf.keras.metrics.BinaryAccuracy(threshold=0.),
-            tf.keras.metrics.BinaryCrossentropy(from_logits=True)]
+loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+metrics = [tf.keras.metrics.CategoricalAccuracy(),
+            tf.keras.metrics.CategoricalCrossentropy(from_logits=True)]
 
 # Compile model
 model.compile(tf.keras.optimizers.Adam(), loss=loss, metrics=metrics)
@@ -435,7 +471,7 @@ print(model.summary())
 print("Training model")
 start = time.time()
 history = model.fit(train_ds_batched,
-                    steps_per_epoch=10,
+                    steps_per_epoch=100,
                     epochs=epochs,
                     validation_data=val_ds_batched)
 end = time.time()
@@ -460,6 +496,109 @@ print("=====================================================")
 
 script_end = time.time()
 print("\n     Total Time Elapsed: {} seconds".format(round(script_end - script_start, 2)))
+
+def get_predict(pred):
+    max_val = -1000000
+    max_idx = -1
+    for x, y in enumerate(pred):
+        if y > max_val:
+            max_idx = x
+            max_val = y
+    return max_idx
+
+def get_predict2(pred, avgs):
+    min_val = 10000000
+    min_idx = -1
+    for i in range(0, len(avgs)):
+        dist = np.linalg.norm(pred, avgs[i])
+        if dist < min_val:
+            min_idx = i
+            min_val = dist
+    return min_idx
+
+def build_predict_list(y_hat):
+    pred_list = []
+    for vector in y_hat:
+        pred = get_predict(vector)
+        pred_list.append(pred)
+    return pred_list
+
+def build_predict_list2(y_hat, avgs):
+    pred_list = []
+    for vector in y_hat:
+        pred = get_predict2(vector, avgs)
+        pred_list.append(pred)
+    return pred_list
+
+def build_confusion_matrix(y_hat, truth):
+    conf_mat = np.zeros(shape=(len(LABELS_TO_PREDICT), len(LABELS_TO_PREDICT)))
+    pred_list = build_predict_list(y_hat)
+    failures = 0
+    for x in range(len(truth)):
+        # print(str(truth[x]) + " " + str(pred_list[x]))
+        if pred_list[x] != -1:
+            conf_mat[truth[x]][pred_list[x]] += 1
+    return conf_mat, failures
+
+def build_confusion_matrix2(y_hat, truth, avgs):
+    conf_mat = np.zeros(shape=(len(LABELS_TO_PREDICT), len(LABELS_TO_PREDICT)))
+    pred_list = build_predict_list2(y_hat, avgs)
+    failures = 0
+    correct = 0
+    incorrect = 0
+    for x in range(len(truth)):
+        if pred_list[x] != -1:
+            conf_mat[truth[x]][pred_list[x]] += 1
+            if truth[x] == pred_list[x]:
+                correct += 1
+            else:
+                incorrect += 1
+    return conf_mat, failures, correct, incorrect
+
+def pred_avgs(y_hat, truth):
+    lists = [[],[],[],[],[],[],[],[]]
+    for x in range(len(y_hat)):
+        lists[truth[x]].append(y_hat[x])
+    
+    avgs = []
+    for label in lists:
+        avg = [float(sum(col))/len(col) for col in zip(*label)]
+        avgs.append(avg)
+
+    return avgs
+
+print("\n*** Evaluate Model ***\n")
+mae = model.evaluate(val_ds_batched)
+y_hat = model.predict(val_ds_batched)
+mat, fail = build_confusion_matrix(y_hat, true_labels)
+print("MAE: {}".format(mae))
+
+print("=== Old Predict ===")
+
+print("Number of Fails: " + str(fail))
+print("Confusion Matrix: Truth ↓ | Predicted ->")
+print("Order is: ", end = "")
+for i in range(0, len(LABELS_TO_PREDICT)):
+    print(LABELS_TO_PREDICT[i], end = " ")
+print("")
+print(mat)
+
+avgs = pred_avgs(y_hat, true_labels)
+mat2, fail2, correct, incorrect = build_confusion_matrix2(y_hat, true_labels, avgs)
+
+print("\n\n=== New Predict ===")
+
+print("Number of Fails: " + str(fail2))
+print("Number Correct: {}, Number Incorrect: {}".format(correct, incorrect))
+print("Accuracy: {}".format(correct / (correct + incorrect)))
+print("Confusion Matrix: Truth ↓ | Predicted ->")
+print("Order is: ", end = "")
+for i in range(0, len(LABELS_TO_PREDICT)):
+    print(LABELS_TO_PREDICT[i], end = " ")
+print("")
+print(mat2)
+
+print("\n\n")
 
 # For matplotlib graph outputs
 # for k, hist in history.history.items():

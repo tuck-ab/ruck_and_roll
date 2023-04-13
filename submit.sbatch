@@ -11,10 +11,6 @@
 source venv/bin/activate
 
 source /etc/profile.d/modules.sh
-module load CUDA
 
-srun python game_label_model/graph_model/generation/graph_model_script.py --number 0
-srun python game_label_model/graph_model/generation/graph_model_script.py --number 1
-srun python game_label_model/graph_model/generation/graph_model_script.py --number 2
-srun python game_label_model/graph_model/generation/graph_model_script.py --number 3
-srun python game_label_model/graph_model/generation/graph_model_script.py --number 4
+srun python game_label_model/graph_model/generation/graph_model_script.py --number 33
+srun python game_label_model/graph_model/generation/graph_model_script.py --number 32
