@@ -3,3 +3,6 @@ class ErrorPlayingVideoException(Exception):
 
 class BufferTooSmallException(Exception):
     pass
+
+class FrameOutOfVideoException(Exception):
+    pass

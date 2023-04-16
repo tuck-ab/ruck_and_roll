@@ -5,7 +5,8 @@ from typing import Optional, Tuple
 import cv2
 import numpy as np
 
-from .custom_exceptions import ErrorPlayingVideoException, BufferTooSmallException
+from .custom_exceptions import (ErrorPlayingVideoException, BufferTooSmallException, 
+                                FrameOutOfVideoException)
 
 class VideoHandler:
     """Class for wrapping accessing videos for the rest
@@ -20,6 +21,7 @@ class VideoHandler:
                 "Buffer must be of minimum size 1")
         else:
             self._buffer_max_size = buffer_size
+            
     
     def load_video(self, vid_path: str, start_frame: Optional[int] = None) -> VideoHandler:
         """Loads the video from a given path to interact with.
@@ -134,6 +136,33 @@ class VideoHandler:
             return frame
         else:
             return np.zeros((self.width, self.height))
+        
+    def set_frame(self, frame_num: int):
+        if frame_num >= self._cap.get(cv2.CAP_PROP_FRAME_COUNT):
+            raise FrameOutOfVideoException("Frame number outside of video length")
+        
+        self.current_frame_num = frame_num - 1
+        self._cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_num)
+        return self.get_next_frame()
+        
+        
+    def get_clip(self, start_frame: int, length: int) -> list[np.ndarray]:
+        if start_frame + length >= self._cap.get(cv2.CAP_PROP_FRAME_COUNT):
+            raise FrameOutOfVideoException("The clip would extend past the end of the video")
+        
+        self._cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+        frames = []
+        for _ in range(0, length):
+            ret, frame = self._cap.read()
+            if ret:
+                frames.append(frame)
+            else:
+                raise ErrorPlayingVideoException("Could not load frame when generating clip")
+            
+        self._cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_num)
+
+        return frames
     
     def show_frame(self, frame: np.ndarray):
         """Shows the frame
