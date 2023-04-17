@@ -22,7 +22,7 @@ import tensorflow as tf
 import tensorflow_gnn as tfgnn
 import pathlib
 
-YOLO_MODEL = "yolov7_480x640.onnx"
+YOLO_MODEL = os.path.join(pathlib.Path(__file__).parent, "yolov7_480x640.onnx")
 TFRECORD_FILEPATH = os.path.join(pathlib.Path(__file__).parent, "graph.tfrecords")
 
 # GNN Labels
@@ -109,14 +109,14 @@ def create_graph_tensor(nodes, edges, labelID):
     label_matrix = label_matrix.astype('int64')
     g = tfgnn.GraphTensor.from_pieces(
     node_sets = {
-      'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={'hidden_state': node_feats})},
+        'players': tfgnn.NodeSet.from_fields(sizes=[len(nodes)], features={'hidden_state': node_feats})},
     edge_sets = {
-      'distances': tfgnn.EdgeSet.from_fields(
-         sizes=[len(nodes) * len(nodes)],
-         features={'hidden_state' : weight},
-         adjacency=tfgnn.Adjacency.from_indices(
-           source=('players', sources),
-           target=('players', dests)))},
+        'distances': tfgnn.EdgeSet.from_fields(
+            sizes=[len(nodes) * len(nodes)],
+            features={'hidden_state' : weight},
+            adjacency=tfgnn.Adjacency.from_indices(
+                source=('players', sources),
+                target=('players', dests)))},
     context =
         tfgnn.Context.from_fields(
             features={'label': label_matrix}, sizes=[len(label_matrix)]
