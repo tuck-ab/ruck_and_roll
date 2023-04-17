@@ -1,0 +1,69 @@
+class BoundingBox:
+    """
+    Class used to store the bounding box results of the YOLO output
+    These can be cleanly handled by other files rather than a set of tuples
+    """
+    
+    def __init__(self, x, y, w, h, score, class_name, timestamp):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.score = score
+        self.class_name = class_name
+        self.timestamp = timestamp
+
+    def get_corners(self):
+        """
+        Gets the four corners of the bounding box starting in the top left in a clockwise direction.
+        Coordinates are in (x, y) format
+        """
+        
+        corners = []
+        corners.append([self.x, self.y])
+        corners.append([self.x + self.w, self.y])
+        corners.append([self.x + self.w, self.y + self.h])
+        corners.append([self.x, self.y + self.h])
+
+        return corners
+
+    def get_mid_point(self):
+        """
+        Gets the midpoint of the bounding box, returns coordinates as (x, y)
+        """
+        midx = self.x + round(self.w / 2)
+        midy = self.y + round(self.h / 2)
+
+        return [midx, midy]
+
+    def get_class_and_score(self):
+        """
+        Gets the classID and confidence score attributes, returns as an array [classID, confidence score]
+        """
+
+        return [self.class_name, self.score]
+
+    def get_width_height(self):
+        """
+        Gets the width and height of the bounding box
+        """
+        return self.w, self.h
+    
+    def get_area(self):
+        """
+        Gets the area of the bounding box (width * height)
+        """
+        return self.w * self.h
+
+    def get_perimeter(self):
+        """
+        Gets the perimeter of the bounding box
+        """
+        return 2 * self.w + 2 * self.h
+
+    def print_BB(self):
+        """
+        Provides a formatted method for printing the bounding box class
+        This method is useful for debugging
+        """
+        print(self.x, self.y, self.w, self.h, self.score, self.class_name, self.timestamp)
