@@ -16,7 +16,7 @@ VIDEO = "220611galleivnor_2_movie-001.mov"
 LABEL_FILE = "gallconcat.lbl"
 NEED_TO_GEN = False
 ## Intermediate file path thing
-GRAPH_PATH = "~/ruck_and_roll/game_label_model/graph_model/graph.tfrecords"
+GRAPH_PATH = "./game_label_model/graph_model/graph.tfrecords"
 
 def main(video_dir, yolo_model_dir, temp_dir, label_dir):
     vid_path = os.path.join(video_dir, VIDEO)
@@ -36,14 +36,13 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
     model = build_model()
 
-    # raise KeyboardInterrupt
-
     checkpoint_dir = os.path.join(temp_dir, "first_big_model_checkpoint")
     if not os.path.isdir(checkpoint_dir):
         os.mkdir(checkpoint_dir)
 
     save_path = os.path.join(temp_dir, "first_big_model.h5")
 
+    print("training")
     model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=1)
 
     model = load_model(os.path.join(temp_dir, "first_big_model.h5"))

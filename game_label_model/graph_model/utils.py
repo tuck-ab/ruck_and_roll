@@ -109,9 +109,9 @@ def decode_fn(record_bytes):
 
     # extract label from context and remove from input graph
     context_features = graph.context.get_features_dict()
-    print(context_features)
+    # print(context_features)
     label = context_features.pop('label')
-    print(context_features)
+    # print(context_features)
     new_graph = graph.replace_features(context=context_features)
 
     return new_graph, label

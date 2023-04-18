@@ -8,11 +8,12 @@ from tensorflow.image import resize
 from tensorflow.keras.utils import Sequence, to_categorical
 from tensorflow.keras.models import load_model
 
+from .data_gen import get_bb_ims
 from .graph_model import (GraphGenerator, convert_label, create_graph_tensor,
                           decode_fn, label_to_numeric, write_tensors)
 from .hyperparameters import (BATCH_SIZE, CLIP_SIZE, NUM_CNNS,
                               THREED_CNN_INPUT_SHAPE)
-from .labels import LABELS, NUM_CLASSES
+from .labels import LABELS, NUM_CLASSES, Label
 from .labels import load_from_file as load_labels_from_file
 from .video_handler import VideoHandler
 from .yolo_handler import YOLORunner
@@ -52,9 +53,13 @@ class CustomSequence(Sequence):
 
         for i in indicies:
             frame = self.labels.iloc[i]["frame"]
-            bbs_path = os.path.join(self.intermidiate_dir, f"yolo-{frame}.npy")
+            # bbs_path = os.path.join(self.intermidiate_dir, f"yolo-{frame}.npy")
 
-            for bb, batch_x in zip(np.load(bbs_path), batch_bb_xs):
+            # for bb, batch_x in zip(np.load(bbs_path), batch_bb_xs):
+            #     batch_x.append(bb)
+
+            ## BB generation
+            for bb, batch_x in zip(get_bb_ims(self.yolo_handler, frame), batch_bb_xs):
                 batch_x.append(bb)
 
             # GNN Preprocessing
@@ -77,9 +82,9 @@ class CustomSequence(Sequence):
             batch_size = 32
             graph_ds_batched = graph_ds.batch(batch_size=batch_size)
 
-            prediction = gnn_model.predict(graph_ds_batched)
+            prediction = gnn_model.predict(graph_ds_batched, verbose=0)
 
-            graph_predictions.append(prediction)
+            graph_predictions.append(prediction[0])
 
             # End of GNN Preprocessing
 
@@ -93,8 +98,9 @@ class CustomSequence(Sequence):
         batch_x_final = [np.array(clips)]
         for xs in batch_bb_xs:
             batch_x_final.append(np.array(xs))
-        for pred in graph_predictions:
-            batch_x_final.append(pred)
+        # for pred in graph_predictions:
+        
+        batch_x_final.append(np.array(graph_predictions))
 
         return batch_x_final, to_categorical(batch_y, num_classes=NUM_CLASSES)
 
@@ -106,6 +112,8 @@ class CustomSequence(Sequence):
 def get_train_test_val(video_path, yolo_path, graph_path, int_data_dir, labels_path, clip_size=CLIP_SIZE, limit=None):
     labels = pd.DataFrame(load_labels_from_file(labels_path), columns=["label"])
     labels["frame"] = labels.index
+
+    labels = labels[labels["label"].apply(lambda x:x.value != Label.NOTHING.value)].reset_index(drop=True)
 
     if limit:
         labels = labels[:limit]

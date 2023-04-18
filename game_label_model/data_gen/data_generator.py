@@ -20,35 +20,40 @@ class IntermediateDataGenerator:
             size = np.inf
 
         while valid and self._video_handler.current_frame_num + start < size:
-            result = self._yolo_handler.run(frame)
-
-            bb_ims = []
-
-            for bb in result.get_store():
-                if bb.class_name in VALID_YOLO_LABELS:
-                    x_start, x_end = bb.x, bb.x+bb.w
-                    y_start, y_end = bb.y, bb.y+bb.h
-
-                    bb_im = frame[y_start: y_end, x_start: x_end, :]
-                    bb_ims.append(bb_im)
-
-            ## Choose which bounding boxes to use
-            ## TODO Make this a better choice
-            bb_ims = bb_ims[:NUM_CNNS]
-
-            temp = [pad_image(im, BB_SIZE) for im in bb_ims]
-            bb_ims = temp
-
-            while len(bb_ims) < 10:
-                bb_ims.append(np.zeros((*BB_SIZE, 3)))
-
-            bb_ims = np.array(bb_ims)        
+                   
+            bb_ims = get_bb_ims(self._yolo_handler, frame)
 
             ## Save the bb_ims_to_size
             f_name = f"yolo-{self._video_handler.current_frame_num}.npy"
             np.save(os.path.join(out_dir, f_name), bb_ims)
 
             frame, valid = self._video_handler.get_next_frame()
+
+def get_bb_ims(handler, frame):
+    result = handler.run(frame)
+
+    bb_ims = []
+
+    for bb in result.get_store():
+        if bb.class_name in VALID_YOLO_LABELS:
+            x_start, x_end = bb.x, bb.x+bb.w
+            y_start, y_end = bb.y, bb.y+bb.h
+
+            bb_im = frame[y_start: y_end, x_start: x_end, :]
+            bb_ims.append(bb_im)
+
+    ## Choose which bounding boxes to use
+    ## TODO Make this a better choice
+    bb_ims = bb_ims[:NUM_CNNS]
+
+    temp = [pad_image(im, BB_SIZE) for im in bb_ims]
+    bb_ims = temp
+
+    while len(bb_ims) < 10:
+        bb_ims.append(np.zeros((*BB_SIZE, 3)))
+
+    return np.array(bb_ims) 
+
 
 def pad_image(im, target_size):
     new_im = np.zeros((*target_size, 3)).astype(np.uint8)

@@ -1,7 +1,7 @@
 from .labels import NUM_CLASSES as labels_NUM_CLASSES
 
 BATCH_SIZE = 32
-EPOCHS = 10
+EPOCHS = 2
 
 BB_CNN_FILTERS = 2
 NUM_CNNS = 10
