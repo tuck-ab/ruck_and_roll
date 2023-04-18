@@ -39,13 +39,13 @@ def build_model():
 
     ## The GNN model
     gnn_model = load_model(GNN_MODEL_PATH, compile=True)
-    gnn_model_inputs = Input(type_spec=graph_tensor_spec)
     for layer in gnn_model.layers:
-        gnn_out_shape = layer
+        gnn_out_shape = layer.output_shape
+    gnn_in = Input(shape=(gnn_out_shape[1],), name="gnn")
 
 
     ## Concattenate all the outputs and combine them into a final dense layer
-    concatted = Concatenate()([bb_cnn_out, threed_cnn_out, gnn_out_shape])
+    concatted = Concatenate()([bb_cnn_out, threed_cnn_out, gnn_in])
     curr_layer = Flatten()(concatted)
 
     ## TODO add some more dense layers here?
@@ -60,7 +60,7 @@ def build_model():
     model_inputs = [threed_input]
     for input_layer in bb_cnn_ins:
         model_inputs.append(input_layer)
-    model_inputs.append([gnn_model_inputs])
+    model_inputs.append([gnn_in])
 
     ## Build and compile the model
     model = Model(model_inputs, output_layer)

@@ -6,6 +6,7 @@ from sklearn.model_selection import StratifiedKFold
 from tensorflow.data import TFRecordDataset
 from tensorflow.image import resize
 from tensorflow.keras.utils import Sequence, to_categorical
+from tensorflow.keras.models import load_model
 
 from .graph_model import (GraphGenerator, convert_label, create_graph_tensor,
                           decode_fn, label_to_numeric, write_tensors)
@@ -18,7 +19,7 @@ from .yolo_handler import YOLORunner
 
 # YOLO_MODEL = os.path.join(pathlib.Path(__file__).parent, "yolov7_480x640.onnx")
 # TFRECORD_FILEPATH = os.path.join(pathlib.Path(__file__).parent, "graph.tfrecords")
-
+GNN_MODEL_PATH = "./22"
 
 class CustomSequence(Sequence):
     def __init__(self, vid_path, yolo_path, tfrecord_path, labels, int_dir, batch_size, clip_size=CLIP_SIZE,
@@ -45,7 +46,9 @@ class CustomSequence(Sequence):
         batch_y = []
 
         clips = []
-        graph_tensor_datasets = []
+        graph_predictions = []
+
+        gnn_model = load_model(GNN_MODEL_PATH, compile=True)
 
         for i in indicies:
             frame = self.labels.iloc[i]["frame"]
@@ -74,7 +77,9 @@ class CustomSequence(Sequence):
             batch_size = 32
             graph_ds_batched = graph_ds.batch(batch_size=batch_size)
 
-            graph_tensor_datasets.append(graph_ds_batched)
+            prediction = gnn_model.predict(graph_ds_batched)
+
+            graph_predictions.append(prediction)
 
             # End of GNN Preprocessing
 
@@ -88,8 +93,8 @@ class CustomSequence(Sequence):
         batch_x_final = [np.array(clips)]
         for xs in batch_bb_xs:
             batch_x_final.append(np.array(xs))
-        for graph_tensor in graph_tensor_datasets:
-            batch_x_final.append(graph_tensor)
+        for pred in graph_predictions:
+            batch_x_final.append(pred)
 
         return batch_x_final, to_categorical(batch_y, num_classes=NUM_CLASSES)
 
