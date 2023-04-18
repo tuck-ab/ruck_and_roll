@@ -9,57 +9,18 @@ from tensorflow.keras.layers import Concatenate, Dense, Flatten, Dropout
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import load_model
 
 from .bb_cnn_model import BoundingBoxCNN
 from .dir_paths import MODULE_DIR
 from .hyperparameters import EPOCHS, NUM_CLASSES
 from .labels import LABELS, LabelMapper
 from .threed_cnn_model import ThreeDCNN
+from .graph_model import graph_tensor_spec
 
-import tensorflow as tf
-import tensorflow_gnn as tfgnn
-from tensorflow.keras.models import load_model
-import pathlib
+# GNN_MODEL_PATH = os.path.join(pathlib.Path(__file__).parent, "22")
+GNN_MODEL_PATH = "./22"
 
-GNN_MODEL_PATH = os.path.join(pathlib.Path(__file__).parent, "22")
-
-# GNN Labels
-LABELS_TO_PREDICT = [
-    "CARRY",
-    "PASS",
-    "KICK",
-    "RUCK",
-    "TACKLE",
-    "LINEOUT",
-    "SCRUM",
-    "MAUL"    
-]
-
-# Graph spec for the model
-graph_tensor_spec = tfgnn.GraphTensorSpec.from_piece_specs(
-    context_spec=tfgnn.ContextSpec.from_field_specs(features_spec={
-                  'label': tf.TensorSpec(shape=(len(LABELS_TO_PREDICT),), dtype=tf.int32)
-    }),
-    node_sets_spec={
-        'players':
-            tfgnn.NodeSetSpec.from_field_specs(
-                features_spec={
-                    tfgnn.HIDDEN_STATE:
-                        tf.TensorSpec((None, 2), tf.float32)
-                },
-                sizes_spec=tf.TensorSpec((1,), tf.int32))
-    },
-    edge_sets_spec={
-        'distances':
-            tfgnn.EdgeSetSpec.from_field_specs(
-                features_spec={
-                    tfgnn.HIDDEN_STATE:
-                        tf.TensorSpec((None, 1), tf.float32)
-                },
-                sizes_spec=tf.TensorSpec((1,), tf.int32),
-                adjacency_spec=tfgnn.AdjacencySpec.from_incident_node_sets(
-                    'players', 'players'))
-    })
 
 def build_model():
     ## The BB_CNN model part
@@ -78,9 +39,9 @@ def build_model():
 
     ## The GNN model
     gnn_model = load_model(GNN_MODEL_PATH, compile=True)
-    gnn_model_inputs = tf.keras.layers.Input(type_spec=graph_tensor_spec)
+    gnn_model_inputs = Input(type_spec=graph_tensor_spec)
     for layer in gnn_model.layers:
-        gnn_out_shape = layer.output_shape
+        gnn_out_shape = layer
 
 
     ## Concattenate all the outputs and combine them into a final dense layer

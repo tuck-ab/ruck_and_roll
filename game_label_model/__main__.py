@@ -15,6 +15,8 @@ YOLO_MODEL = "yolov7_480x640.onnx"
 VIDEO = "220611galleivnor_2_movie-001.mov"
 LABEL_FILE = "gallconcat.lbl"
 NEED_TO_GEN = False
+## Intermediate file path thing
+GRAPH_PATH = "~/ruck_and_roll/game_label_model/graph_model/graph.tfrecords"
 
 def main(video_dir, yolo_model_dir, temp_dir, label_dir):
     vid_path = os.path.join(video_dir, VIDEO)
@@ -30,9 +32,11 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
         data_gen.generate(int_data_dir)
 
-    train_seq, val_seq, test_seq = get_train_test_val(vid_path, int_data_dir, labels_path)
+    # train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path)
 
     model = build_model()
+
+    raise KeyboardInterrupt
 
     checkpoint_dir = os.path.join(temp_dir, "first_big_model_checkpoint")
     if not os.path.isdir(checkpoint_dir):

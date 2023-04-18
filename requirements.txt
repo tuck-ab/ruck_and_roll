@@ -7,6 +7,7 @@ matplotlib
 onnxruntime
 
 tensorflow==2.9.1
+tensorflow_gnn
 pydot
 
 scikit-learn
