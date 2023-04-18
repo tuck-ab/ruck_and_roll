@@ -62,7 +62,7 @@ class CustomSequence(Sequence):
             image = self.video_handler.get_frame(frame)
             results = self.yolo_handler.run(image)
 
-            graph_gen = GraphGenerator(*results)
+            graph_gen = GraphGenerator(results)
             m, nodes = graph_gen.get_graph().get_edge_matrix()
 
             ourLabel = convert_label(self.labels.iloc[i]["label"].name, LABELS)

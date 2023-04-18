@@ -32,11 +32,11 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
         data_gen.generate(int_data_dir)
 
-    # train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path)
+    train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path)
 
     model = build_model()
 
-    raise KeyboardInterrupt
+    # raise KeyboardInterrupt
 
     checkpoint_dir = os.path.join(temp_dir, "first_big_model_checkpoint")
     if not os.path.isdir(checkpoint_dir):
