@@ -51,9 +51,12 @@ def build_model():
     curr_layer = Flatten()(concatted)
 
     ## TODO add some more dense layers here?
-    for size in [1024, 512, 256, 128, 64, 32]:
-        curr_layer = Dense(size, activation="relu")(curr_layer)
-        curr_layer = Dropout(0.3)(curr_layer)
+    layer_sizes = [1024, 512, 256, 128, 64, 32]
+    layers = ["relu", "relu", "relu", "relu", "relu", "relu"]
+    dropout_rate = 0.3
+    for i in range(0, len(layers)):
+        curr_layer = Dense(layer_sizes[i], activation=layers[i])(curr_layer)
+        curr_layer = Dropout(dropout_rate)(curr_layer)
 
     ## The final output layer
     output_layer = Dense(NUM_CLASSES, activation="softmax")(curr_layer)
