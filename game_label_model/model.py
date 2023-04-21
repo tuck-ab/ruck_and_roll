@@ -26,7 +26,7 @@ GNN_MODEL_PATH = "./22"
 ## CHANGE TO ENSURE NO OVERWRITING
 MODEL_NUM = "3"
 
-def build_model():
+def build_model(gnn_model_path):
     ## The BB_CNN model part
     bb_cnn = BoundingBoxCNN()
 
@@ -42,7 +42,7 @@ def build_model():
     threed_cnn_out = threed_cnn.get_tensors(threed_input)
 
     ## The GNN model
-    gnn_model = load_model(GNN_MODEL_PATH, compile=True)
+    gnn_model = load_model(gnn_model_path, compile=True)
     for layer in gnn_model.layers:
         gnn_out_shape = layer.output_shape
     gnn_in = Input(shape=(gnn_out_shape[1],), name="gnn")
@@ -72,7 +72,7 @@ def build_model():
     return model
 
 def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, verbose=2):
-    file_name = os.path.join(checkpoint_dir, "model_checkpoint" + MODEL_NUM + ".h5")
+    file_name = os.path.join(checkpoint_dir, "model_checkpoint.h5")
     checkpoint = ModelCheckpoint(file_name)
 
     print("\nData Generated, Now Fitting")
@@ -98,7 +98,7 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
         plt.clf()
         plt.plot(hist)
         plt.title(k)
-        plt.savefig("Model" + MODEL_NUM + "_" + k + '.pdf')
+        plt.savefig("Model_" + k + '.pdf')
 
     return model
 

@@ -33,8 +33,7 @@ class CommandLineInterface:
 
         self.parser.add_argument(
             "--model_num",
-            help="Optional number to save model to different number file",
-            action="store_const"
+            help="Optional number to save model to different number file"
         )
 
     def parse(self):

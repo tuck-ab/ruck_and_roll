@@ -36,7 +36,7 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir, graph_dir, model_num):
     train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, graph_dir, 
                                                       int_data_dir, labels_path, limit=5000)
 
-    model = build_model()
+    model = build_model(os.path.join(graph_dir, "22"))
 
     checkpoint_dir = os.path.join(temp_dir, f"big_model_checkpoint{model_num}")
     if not os.path.isdir(checkpoint_dir):
