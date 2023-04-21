@@ -5,18 +5,20 @@ import numpy as np
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import Concatenate, Dense, Flatten, Dropout
+from tensorflow.keras.layers import Concatenate, Dense, Dropout, Flatten
 from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import load_model
 
 from .bb_cnn_model import BoundingBoxCNN
 from .dir_paths import MODULE_DIR
-from .hyperparameters import EPOCHS, NUM_CLASSES
+from .graph_model import graph_tensor_spec
+from .hyperparameters import (EPOCHS, JOINT_LAYER_ACTIVATIONS,
+                              JOINT_LAYER_DROPOUT_RATE, JOINT_LAYER_SIZES,
+                              NUM_CLASSES)
 from .labels import LABELS, LabelMapper
 from .threed_cnn_model import ThreeDCNN
-from .graph_model import graph_tensor_spec
 
 # GNN_MODEL_PATH = os.path.join(pathlib.Path(__file__).parent, "22")
 GNN_MODEL_PATH = "./22"
@@ -50,13 +52,9 @@ def build_model():
     concatted = Concatenate()([bb_cnn_out, threed_cnn_out, gnn_in])
     curr_layer = Flatten()(concatted)
 
-    ## TODO add some more dense layers here?
-    layer_sizes = [1024, 512, 256, 128, 64, 32]
-    layers = ["relu", "relu", "relu", "relu", "relu", "relu"]
-    dropout_rate = 0.3
-    for i in range(0, len(layers)):
-        curr_layer = Dense(layer_sizes[i], activation=layers[i])(curr_layer)
-        curr_layer = Dropout(dropout_rate)(curr_layer)
+    for size, activiation in zip(JOINT_LAYER_SIZES, JOINT_LAYER_ACTIVATIONS):
+        curr_layer = Dense(size, activation=activiation)(curr_layer)
+        curr_layer = Dropout(JOINT_LAYER_DROPOUT_RATE)(curr_layer)
 
     ## The final output layer
     output_layer = Dense(NUM_CLASSES, activation="softmax")(curr_layer)

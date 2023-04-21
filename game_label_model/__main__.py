@@ -16,12 +16,10 @@ VIDEO = "220611galleivnor_2_movie-001.mov"
 LABEL_FILE = "gallconcat.lbl"
 NEED_TO_GEN = False
 ## Intermediate file path thing
-GRAPH_PATH = "./game_label_model/graph_model/graph.tfrecords"
+# GRAPH_PATH = "./game_label_model/graph_model/graph.tfrecords"
 
-## CHANGE TO ENSURE NO OVERWRITING
-MODEL_NUM = "3"
 
-def main(video_dir, yolo_model_dir, temp_dir, label_dir):
+def main(video_dir, yolo_model_dir, temp_dir, label_dir, graph_dir, model_num):
     vid_path = os.path.join(video_dir, VIDEO)
     yolo_path = os.path.join(yolo_model_dir, YOLO_MODEL)
     labels_path = os.path.join(label_dir, LABEL_FILE)
@@ -35,21 +33,22 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
         data_gen.generate(int_data_dir)
 
-    train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path, limit=5000)
+    train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, graph_dir, 
+                                                      int_data_dir, labels_path, limit=5000)
 
     model = build_model()
 
-    checkpoint_dir = os.path.join(temp_dir, "big_model_checkpoint" + MODEL_NUM)
+    checkpoint_dir = os.path.join(temp_dir, f"big_model_checkpoint{model_num}")
     if not os.path.isdir(checkpoint_dir):
         os.mkdir(checkpoint_dir)
 
-    save_path = os.path.join(temp_dir, "big_model" + MODEL_NUM + ".h5")
+    save_path = os.path.join(temp_dir, f"big_model{model_num}.h5")
 
     print("\nTraining")
     model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=1)
     
     print("\nTraining Done")
-    model = load_model(os.path.join(temp_dir, "big_model" + MODEL_NUM + ".h5"))
+    model = load_model(os.path.join(temp_dir, f"big_model{model_num}.h5"))
     
     print("\nTesting")
     test_model(model, test_seq)
@@ -69,12 +68,16 @@ if __name__ == "__main__":
     temp_dir = cli.get_temp_dir()
 
     label_dir = cli.get_label_dir()
+
+    graph_dir = cli.get_graph_model_dir()
+
+    model_num = cli.get_model_num()
     
     what_to_run = cli.get_what_to_run()
 
     if what_to_run == "u1903266":
         u1903266_run(video_dir, yolo_model_dir, temp_dir, label_dir)
     elif what_to_run == "main":
-        main(video_dir, yolo_model_dir, temp_dir, label_dir)
+        main(video_dir, yolo_model_dir, temp_dir, label_dir, graph_dir, model_num)
     else:
-        main(video_dir, yolo_model_dir, temp_dir, label_dir)
+        main(video_dir, yolo_model_dir, temp_dir, label_dir, graph_dir, model_num)

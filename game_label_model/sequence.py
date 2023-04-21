@@ -21,10 +21,10 @@ from .yolo_handler import YOLORunner
 
 # YOLO_MODEL = os.path.join(pathlib.Path(__file__).parent, "yolov7_480x640.onnx")
 # TFRECORD_FILEPATH = os.path.join(pathlib.Path(__file__).parent, "graph.tfrecords")
-GNN_MODEL_PATH = "./22"
 
 class CustomSequence(Sequence):
-    def __init__(self, vid_path, yolo_path, tfrecord_path, labels, int_dir, batch_size, clip_size=CLIP_SIZE,
+    def __init__(self, vid_path, yolo_path, gnn_path, 
+                 labels, int_dir, batch_size, clip_size=CLIP_SIZE,
                  image_size=THREED_CNN_INPUT_SHAPE[1:3]):
         self.labels = labels
 
@@ -35,7 +35,8 @@ class CustomSequence(Sequence):
         self.video_handler = VideoHandler().load_video(vid_path)
         self.intermidiate_dir = int_dir
         self.yolo_handler = YOLORunner(yolo_path)
-        self.tfrecord_path = tfrecord_path
+        self.tfrecord_path = os.path.join(gnn_path, "graph.tfrecords")
+        self.gnn_model = os.path.join(gnn_path, "22")
 
     def __len__(self):
         return int(np.floor(len(self.labels) / self.batch_size))
@@ -50,7 +51,7 @@ class CustomSequence(Sequence):
         clips = []
         graph_predictions = []
 
-        gnn_model = load_model(GNN_MODEL_PATH, compile=True)
+        gnn_model = load_model(self.gnn_model, compile=True)
 
         for i in indicies:
             frame = self.labels.iloc[i]["frame"]

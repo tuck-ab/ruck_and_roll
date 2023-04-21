@@ -38,3 +38,6 @@ slurms
 game_label_model/bb_cnn_model/bb_nums
 game_label_model/bb_cnn_model/bb_data
 game_label_model/bb_cnn_model/bb_data_new
+
+# Dir for the graph models
+graph_models
