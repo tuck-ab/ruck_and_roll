@@ -18,6 +18,9 @@ NEED_TO_GEN = False
 ## Intermediate file path thing
 GRAPH_PATH = "./game_label_model/graph_model/graph.tfrecords"
 
+## CHANGE TO ENSURE NO OVERWRITING
+MODEL_NUM = "3"
+
 def main(video_dir, yolo_model_dir, temp_dir, label_dir):
     vid_path = os.path.join(video_dir, VIDEO)
     yolo_path = os.path.join(yolo_model_dir, YOLO_MODEL)
@@ -36,17 +39,17 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
     model = build_model()
 
-    checkpoint_dir = os.path.join(temp_dir, "second_big_model_checkpoint")
+    checkpoint_dir = os.path.join(temp_dir, "big_model_checkpoint" + MODEL_NUM)
     if not os.path.isdir(checkpoint_dir):
         os.mkdir(checkpoint_dir)
 
-    save_path = os.path.join(temp_dir, "second_big_model.h5")
+    save_path = os.path.join(temp_dir, "big_model" + MODEL_NUM + ".h5")
 
     print("\nTraining")
     model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=1)
     
     print("\nTraining Done")
-    model = load_model(os.path.join(temp_dir, "second_big_model.h5"))
+    model = load_model(os.path.join(temp_dir, "big_model" + MODEL_NUM + ".h5"))
     
     print("\nTesting")
     test_model(model, test_seq)

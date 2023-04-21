@@ -21,6 +21,8 @@ from .graph_model import graph_tensor_spec
 # GNN_MODEL_PATH = os.path.join(pathlib.Path(__file__).parent, "22")
 GNN_MODEL_PATH = "./22"
 
+## CHANGE TO ENSURE NO OVERWRITING
+MODEL_NUM = "3"
 
 def build_model():
     ## The BB_CNN model part
@@ -69,7 +71,7 @@ def build_model():
     return model
 
 def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, verbose=2):
-    file_name = os.path.join(checkpoint_dir, "model_checkpoint.h5")
+    file_name = os.path.join(checkpoint_dir, "model_checkpoint" + MODEL_NUM + ".h5")
     checkpoint = ModelCheckpoint(file_name)
 
     print("\nData Generated, Now Fitting")
@@ -95,7 +97,7 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
         plt.clf()
         plt.plot(hist)
         plt.title(k)
-        plt.savefig("Model2_" + k + '.pdf')
+        plt.savefig("Model" + MODEL_NUM + "_" + k + '.pdf')
 
     return model
 
@@ -108,10 +110,10 @@ def test_model(model, test_sequence):
     conf_matrix = confusion_matrix(labels, preds, labels=np.unique(labels))
     disp = ConfusionMatrixDisplay(conf_matrix, display_labels=np.unique(labels))
     disp.plot()
-    plt.savefig(os.path.join(MODULE_DIR, "big_confusion_matrix.pdf"))
+    plt.savefig(os.path.join(MODULE_DIR, "big_confusion_matrix" + MODEL_NUM + ".pdf"))
 
 def naiive_train_model(model, generator, checkpoint_dir, save_path, verbose=0):
-    file_name = os.path.join(checkpoint_dir, "model_checkpoint")
+    file_name = os.path.join(checkpoint_dir, "model" + MODEL_NUM + "_checkpoint")
     checkpoint = ModelCheckpoint(file_name)
     
     model.fit(x=generator, callbacks=[checkpoint], use_multiprocessing=False, verbose=verbose)

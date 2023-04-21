@@ -1,4 +1,5 @@
 import os
+import random
 
 import numpy as np
 import pandas as pd
@@ -115,8 +116,8 @@ def get_train_test_val(video_path, yolo_path, graph_path, int_data_dir, labels_p
 
     labels = labels[labels["label"].apply(lambda x:x.value != Label.NOTHING.value)].reset_index(drop=True)
 
-    if limit:
-        labels = labels[:limit]
+    #if limit:
+    #    labels = labels[:limit]
 
     buff_size = (clip_size // 2) + 1
     labels = labels.iloc[buff_size:-buff_size]
@@ -127,6 +128,31 @@ def get_train_test_val(video_path, yolo_path, graph_path, int_data_dir, labels_p
     splits = [test_index for _, test_index in skf.split(labels, labels["label"].apply(lambda x: x.value))]
 
     train_indecies = np.concatenate([splits[i] for i in [0, 1, 2]])
+    
+    # Label balancing
+    print("\nPerforming Label Balancing")
+    total = np.zeros(NUM_CLASSES - 1, np.float32)
+    for i in range(0, len(train_indecies)):
+        total[labels.iloc[train_indecies[i]]["label"].value - 2] += 1
+
+    numFrames = np.sum(total)
+    if limit:
+        numPerClass = limit / (NUM_CLASSES - 1)
+    print("Total Frames: {}".format(numFrames))
+    print("Breakdown: {}".format(total))
+
+    new_train_indicies = []
+    new_totals = np.zeros(NUM_CLASSES - 1, np.float32)
+    for i in range(0, len(train_indecies)):
+        label_val = labels.iloc[train_indecies[i]]["label"].value - 2
+        prob = numPerClass / total[label_val]
+        if random.uniform(0, 1) <= prob:
+            new_train_indicies.append(train_indecies[i])
+            new_totals[label_val] += 1
+
+    print("New Breakdown: {}".format(new_totals))
+    print("Total frames: {}\n".format(np.sum(new_totals)))
+    train_indecies = new_train_indicies
 
     train_sequence = CustomSequence(video_path, yolo_path, graph_path, labels.iloc[train_indecies], int_data_dir, BATCH_SIZE)
     validation_sequence = CustomSequence(video_path, yolo_path, graph_path, labels.iloc[splits[3]], int_data_dir, BATCH_SIZE)
