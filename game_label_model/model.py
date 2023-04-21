@@ -23,9 +23,6 @@ from .threed_cnn_model import ThreeDCNN
 # GNN_MODEL_PATH = os.path.join(pathlib.Path(__file__).parent, "22")
 GNN_MODEL_PATH = "./22"
 
-## CHANGE TO ENSURE NO OVERWRITING
-MODEL_NUM = "3"
-
 def build_model(gnn_model_path):
     ## The BB_CNN model part
     bb_cnn = BoundingBoxCNN()
@@ -71,8 +68,8 @@ def build_model(gnn_model_path):
 
     return model
 
-def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, verbose=2):
-    file_name = os.path.join(checkpoint_dir, "model_checkpoint.h5")
+def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, model_num, verbose=2):
+    file_name = os.path.join(checkpoint_dir, "model_checkpoint" + str(model_num) + ".h5")
     checkpoint = ModelCheckpoint(file_name)
 
     print("\nData Generated, Now Fitting")
@@ -98,11 +95,11 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
         plt.clf()
         plt.plot(hist)
         plt.title(k)
-        plt.savefig("Model_" + k + '.pdf')
+        plt.savefig("Model" + str(model_num) + "_" + k + '.pdf')
 
     return model
 
-def test_model(model, test_sequence):
+def test_model(model, test_sequence, model_num):
     labels = test_sequence.labels["label"].apply(lambda x : LABELS[x.value-1])
     # preds = [np.argmax(p) for p in model.predict(test_sequence)]
     preds = [LABELS[np.argmax(p)] for p in model.predict(test_sequence)]
@@ -111,10 +108,10 @@ def test_model(model, test_sequence):
     conf_matrix = confusion_matrix(labels, preds, labels=np.unique(labels))
     disp = ConfusionMatrixDisplay(conf_matrix, display_labels=np.unique(labels))
     disp.plot()
-    plt.savefig(os.path.join(MODULE_DIR, "big_confusion_matrix" + MODEL_NUM + ".pdf"))
+    plt.savefig(os.path.join(MODULE_DIR, "big_confusion_matrix" + str(model_num) + ".pdf"))
 
-def naiive_train_model(model, generator, checkpoint_dir, save_path, verbose=0):
-    file_name = os.path.join(checkpoint_dir, "model" + MODEL_NUM + "_checkpoint")
+def naiive_train_model(model, generator, checkpoint_dir, save_path, model_num, verbose=0):
+    file_name = os.path.join(checkpoint_dir, "model" + str(model_num) + "_checkpoint")
     checkpoint = ModelCheckpoint(file_name)
     
     model.fit(x=generator, callbacks=[checkpoint], use_multiprocessing=False, verbose=verbose)
