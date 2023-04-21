@@ -108,7 +108,7 @@ def test_model(model, test_sequence):
     conf_matrix = confusion_matrix(labels, preds, labels=np.unique(labels))
     disp = ConfusionMatrixDisplay(conf_matrix, display_labels=np.unique(labels))
     disp.plot()
-    plt.savefig(os.path.join(MODULE_DIR, "big_confustion_matrix.png"))
+    plt.savefig(os.path.join(MODULE_DIR, "big_confusion_matrix.pdf"))
 
 def naiive_train_model(model, generator, checkpoint_dir, save_path, verbose=0):
     file_name = os.path.join(checkpoint_dir, "model_checkpoint")
