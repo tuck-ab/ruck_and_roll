@@ -32,22 +32,25 @@ def main(video_dir, yolo_model_dir, temp_dir, label_dir):
 
         data_gen.generate(int_data_dir)
 
-    train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path)
+    train_seq, val_seq, test_seq = get_train_test_val(vid_path, yolo_path, GRAPH_PATH, int_data_dir, labels_path, limit=5000)
 
     model = build_model()
 
-    checkpoint_dir = os.path.join(temp_dir, "first_big_model_checkpoint")
+    checkpoint_dir = os.path.join(temp_dir, "second_big_model_checkpoint")
     if not os.path.isdir(checkpoint_dir):
         os.mkdir(checkpoint_dir)
 
-    save_path = os.path.join(temp_dir, "first_big_model.h5")
+    save_path = os.path.join(temp_dir, "second_big_model.h5")
 
-    print("training")
+    print("\nTraining")
     model = train_model(model, train_seq, val_seq, checkpoint_dir, save_path, verbose=1)
-
-    model = load_model(os.path.join(temp_dir, "first_big_model.h5"))
-
+    
+    print("\nTraining Done")
+    model = load_model(os.path.join(temp_dir, "second_big_model.h5"))
+    
+    print("\nTesting")
     test_model(model, test_seq)
+    print("\nDone")
 
 if __name__ == "__main__":
     cli = CommandLineInterface()

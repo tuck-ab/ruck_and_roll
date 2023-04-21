@@ -72,8 +72,9 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
     file_name = os.path.join(checkpoint_dir, "model_checkpoint.h5")
     checkpoint = ModelCheckpoint(file_name)
 
+    print("\nData Generated, Now Fitting")
     history = model.fit(x=train_sequence, 
-              steps_per_epoch = len(train_sequence),
+              steps_per_epoch = 10,
               validation_data=val_sequence,
               validation_steps=len(val_sequence),
               epochs=EPOCHS,
@@ -82,8 +83,10 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
             #   workers=6,
               verbose=verbose)
     
+    print("Saving model")
     model.save(save_path)
 
+    print("Saving stats")
     for k, hist in history.history.items():
         print("     > ", end = "")
         print(k, end =": ")
@@ -92,7 +95,7 @@ def train_model(model, train_sequence, val_sequence, checkpoint_dir, save_path, 
         plt.clf()
         plt.plot(hist)
         plt.title(k)
-        plt.savefig("Model_" + k + '.pdf')
+        plt.savefig("Model2_" + k + '.pdf')
 
     return model
 

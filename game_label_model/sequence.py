@@ -59,12 +59,12 @@ class CustomSequence(Sequence):
             #     batch_x.append(bb)
 
             ## BB generation
-            for bb, batch_x in zip(get_bb_ims(self.yolo_handler, frame), batch_bb_xs):
-                batch_x.append(bb)
 
             # GNN Preprocessing
 
             image = self.video_handler.get_frame(frame)
+            for bb, batch_x in zip(get_bb_ims(self.yolo_handler, image), batch_bb_xs):
+                batch_x.append(bb)
             results = self.yolo_handler.run(image)
 
             graph_gen = GraphGenerator(results)
