@@ -61,10 +61,13 @@ def build_model(gnn_model_path):
     for input_layer in bb_cnn_ins:
         model_inputs.append(input_layer)
     model_inputs.append([gnn_in])
+    
+    metrics = [CategoricalAccuracy(),
+            CategoricalCrossentropy()]
 
     ## Build and compile the model
     model = Model(model_inputs, output_layer)
-    model.compile(optimizer=Adam(), loss=CategoricalCrossentropy())
+    model.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=metrics)
 
     return model
 
