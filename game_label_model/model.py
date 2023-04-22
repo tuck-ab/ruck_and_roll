@@ -7,6 +7,8 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.layers import Concatenate, Dense, Dropout, Flatten
 from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow.keras.metrics import CategoricalCrossentropy as CatCrossE
+from tensorflow.keras.metrics import CategoricalAccuracy
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
@@ -63,7 +65,7 @@ def build_model(gnn_model_path):
     model_inputs.append([gnn_in])
     
     metrics = [CategoricalAccuracy(),
-            CategoricalCrossentropy()]
+            CatCrossE()]
 
     ## Build and compile the model
     model = Model(model_inputs, output_layer)

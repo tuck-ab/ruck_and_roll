@@ -157,8 +157,8 @@ def get_train_test_val(video_path, yolo_path, graph_path, int_data_dir, labels_p
     
     # Label balancing
     train_indecies = balance_labels(train_indecies, labels, limit)
-    splits[3] = balance_labels(splits[3], labels, limit / 5)
-    splits[4] = balance_labels(splits[4], labels, limit / 5)
+    splits[3] = balance_labels(splits[3], labels, limit / 3)
+    splits[4] = balance_labels(splits[4], labels, limit / 3)
 
     train_sequence = CustomSequence(video_path, yolo_path, graph_path, labels.iloc[train_indecies], int_data_dir, BATCH_SIZE)
     validation_sequence = CustomSequence(video_path, yolo_path, graph_path, labels.iloc[splits[3]], int_data_dir, BATCH_SIZE)

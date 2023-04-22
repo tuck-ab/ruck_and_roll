@@ -18,5 +18,5 @@ THREED_CNN_POOL_SIZE = (1, 2, 2)
 THREED_CNN_POOL_STRIDES = (1, 2, 2)
 
 JOINT_LAYER_SIZES = [1024, 512, 256, 128, 64, 32]
-JOINT_LAYER_ACTIVATIONS = ["relu", "relu", "relu", "relu", "relu", "relu"]
-JOINT_LAYER_DROPOUT_RATE = 0.3
+JOINT_LAYER_ACTIVATIONS = ["sigmoid", "elu", "swish", "gelu", "sigmoid", "relu"]
+JOINT_LAYER_DROPOUT_RATE = 0.1

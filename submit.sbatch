@@ -12,4 +12,4 @@ source venv2/bin/activate
 
 source /etc/profile.d/modules.sh
 
-srun python -m game_label_model --model_num 4
+srun python -m game_label_model --model_num 5
