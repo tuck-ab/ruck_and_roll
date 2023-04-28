@@ -46,7 +46,6 @@ def build_model(gnn_model_path):
         gnn_out_shape = layer.output_shape
     gnn_in = Input(shape=(gnn_out_shape[1],), name="gnn")
 
-
     ## Concattenate all the outputs and combine them into a final dense layer
     concatted = Concatenate()([bb_cnn_out, threed_cnn_out, gnn_in])
     curr_layer = Flatten()(concatted)

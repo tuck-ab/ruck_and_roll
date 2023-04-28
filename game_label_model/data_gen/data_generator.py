@@ -54,7 +54,6 @@ def get_bb_ims(handler, frame):
 
     return np.array(bb_ims) 
 
-
 def pad_image(im, target_size):
     new_im = np.zeros((*target_size, 3)).astype(np.uint8)
     new_im[:im.shape[0], :im.shape[1]] = im[:new_im.shape[0], :new_im.shape[1]]
