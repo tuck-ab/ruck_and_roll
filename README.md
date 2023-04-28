@@ -1,4 +1,4 @@
-# Predicting head injuries in rugby using video analysis and machine learning
+# Automatic Detection and Recording of Key Events in Rugby Games
 
 ## Members
 
@@ -12,7 +12,26 @@
 
 * Arshad Jhumka
 
-## Virtual environments and dependencies
+## Running the Code
+
+All of the code has been developed as a module. This means the `-m` flag will need
+to be added if running the code from the command line. To find instructions on how
+to use the modules use `--help`. For the game label model:
+
+```
+(venv) python -m game_label_model --help
+```
+
+For the labelling tool:
+
+```
+(venv) python -m label_tool --help
+```
+
+For instructions on how to setup and install the software, see the 
+**Virtual Environments and Dependencies** section
+
+## Virtual Environments and Dependencies
 
 It is recommended to use a virtual environment when developing the software
 to manage the dependencies. A virtual environment acts as a fresh install
@@ -74,21 +93,6 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-This `requirements.txt` file can easily be created using `pip`:
-
-```
-pip freeze > requirements.txt
-```
-
-**Important:** Running this command on Ubuntu will create an extra
-dependency that can not be installed: `pkg_resources==0.0.0`. 
-Therefore when creating `requirements.txt` on Linux the following
-command must be used:
-
-```
-pip freeze | grep -v "pkg_resources" > requirements.txt
-```
-
 ### Running on the DCS machines and compute nodes
 
 To create the virtual environment on the DCS machines, run the following command.
@@ -130,13 +134,4 @@ To see how busy the `falcon` node running the python is, use the following comma
 
 ```
 squeue -p falcon
-```
-
-## Running Python modules
-
-Python modules are run using the `-m` flag, similarly to how you would
-create a virtual environment. To run the `label_tool` module you would use
-
-```
-python -m label_tool
 ```
