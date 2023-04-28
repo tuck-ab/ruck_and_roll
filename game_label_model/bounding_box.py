@@ -42,7 +42,7 @@ class BoundingBox:
         """
 
         return [self.class_name, self.score]
-    
+
     def get_width_height(self):
         """
         Gets the width and height of the bounding box
@@ -60,27 +60,6 @@ class BoundingBox:
         Gets the perimeter of the bounding box
         """
         return 2 * self.w + 2 * self.h
-
-    def get_JSON_dict(self) -> dict:
-        """Gets a dictionary of useful features which can be turned into
-        JSON string
-
-        Returns:
-            dict: JSON dictionary with useful details
-        """
-
-        json_dict = {
-            "x": int(self.x),
-            "y": int(self.y),
-            "width": int(self.w),
-            "height": int(self.h),
-            "score": float(self.score),
-            "class": self.class_name
-        }
-
-        return json_dict
-
-        return json_dict
 
     def print_BB(self):
         """

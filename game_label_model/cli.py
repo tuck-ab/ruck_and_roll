@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR, LABEL_DIR, TEMP_DIR
+from .dir_paths import VIDEO_DIR, YOLO_MODEL_DIR, LABEL_DIR, TEMP_DIR, GRAPH_MODEL_DIR
 
 class CommandLineInterface:
     """Class for dealing with command line options.
@@ -29,6 +29,11 @@ class CommandLineInterface:
         self.parser.add_argument(
             "--run",
             help="What fuction to run"
+        )
+
+        self.parser.add_argument(
+            "--model_num",
+            help="Optional number to save model to different number file"
         )
 
     def parse(self):
@@ -100,6 +105,17 @@ class CommandLineInterface:
             return os.path.join("/dcs", "large", "u1903266", "temp")
         
         return TEMP_DIR
+    
+    def get_graph_model_dir(self) -> str:
+
+
+        return GRAPH_MODEL_DIR
+    
+    def get_model_num(self) -> int:
+        if self.args.model_num:
+            return int(self.args.model_num)
+        else:
+            return 0
 
     def get_what_to_run(self) -> str:
         """Uses the flags to work out if there is a different function to be
